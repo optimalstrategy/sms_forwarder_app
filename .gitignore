@@ -131,3 +131,5 @@ fabric.properties
 /captures
 GeneratedPluginRegistrant.java
 local.properties
+*.jks
+android/key.properties

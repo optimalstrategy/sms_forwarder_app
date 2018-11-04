@@ -1,4 +1,4 @@
-package com.yourcompany.flutterapp;
+package team.whatever.sms_forwarder_app;
 
 import android.os.Bundle;
 
