@@ -606,8 +606,12 @@ class _DeployedTelegramBotForwarderScreen
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                Text(
+                    "Your SMS data will be sent to the broker server!",
+                    style: TextStyle(color: Colors.red, fontSize: 10)
+                ),
                 Text("Specify your telegram @username:"),
-                Padding(padding: EdgeInsets.symmetric(vertical: 5)),
+                Padding(padding: EdgeInsets.symmetric(vertical: 3)),
                 Container(
                   width: 300,
                   child: TextField(
@@ -615,9 +619,9 @@ class _DeployedTelegramBotForwarderScreen
                     controller: _tgHandleController,
                   ),
                 ),
-                Padding(padding: EdgeInsets.symmetric(vertical: 4)),
+                Padding(padding: EdgeInsets.symmetric(vertical: 3)),
                 Text("Specify broker url:"),
-                Padding(padding: EdgeInsets.symmetric(vertical: 5)),
+                Padding(padding: EdgeInsets.symmetric(vertical: 3)),
                 Container(
                   width: 300,
                   child: TextField(
@@ -627,7 +631,7 @@ class _DeployedTelegramBotForwarderScreen
                 ),
                 Padding(padding: EdgeInsets.symmetric(vertical: 4)),
                 Text("Specify bot @handle:"),
-                Padding(padding: EdgeInsets.symmetric(vertical: 5)),
+                Padding(padding: EdgeInsets.symmetric(vertical: 4)),
                 Container(
                   width: 300,
                   child: TextField(
