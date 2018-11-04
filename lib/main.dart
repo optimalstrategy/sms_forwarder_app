@@ -528,8 +528,8 @@ class _DeployedTelegramBotForwarderScreen
     setState(() {
       _tgHandleTextFieldBorder = OutlineInputBorder(
           borderSide: BorderSide(color:
-            _tgHandleController.text.length >= 5 &&
-            _tgHandleController.text.length <= 32 ? Colors.green : Colors.red
+              _checkValidHandle(_tgHandleController.text) ?
+                Colors.green : Colors.red
           )
       );
     });
@@ -556,8 +556,8 @@ class _DeployedTelegramBotForwarderScreen
     setState(() {
       _botHandleTextFieldBorder = OutlineInputBorder(
           borderSide: BorderSide(color:
-          _botHandleController.text.length >= 5 &&
-              _botHandleController.text.length <= 32 ? Colors.green : Colors.red
+            _checkValidHandle(_botHandleController.text) ?
+              Colors.green : Colors.red
           )
       );
     });
