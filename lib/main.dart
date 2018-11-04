@@ -52,7 +52,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    // Load saves settings
+    // Load saved settings
     _loadForwarders();
   }
 
@@ -63,7 +63,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _setForwardersColors(Map map) {
-    debugPrint(map.toString());
     _deployedBotBtnState = map['DeployedTelegramBotForwarder']
         ? Colors.lightGreenAccent : Colors.yellow;
     _tgBotBtnState = map['TelegramBotForwarder']
@@ -88,15 +87,10 @@ class _HomePageState extends State<HomePage> {
               height: 50,
               child: new FlatButton(
                   onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context)
-                          => ForwarderScreen<DeployedTelegramBotForwarder>(
-                              obs: widget.obs
-                          )
-                      )
-                  ).then((_)
-                  => _setForwardersColors(widget.obs.reportReadiness())
+                      context, MaterialPageRoute(builder: (context)
+                            => ForwarderScreen<DeployedTelegramBotForwarder>(obs: widget.obs)
+                      )).then((_)
+                        => _setForwardersColors(widget.obs.reportReadiness())
                   ),
                   color: _deployedBotBtnState,
                   child: Text(
@@ -112,15 +106,10 @@ class _HomePageState extends State<HomePage> {
               height: 50,
               child: new FlatButton(
                 onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context)
-                        => ForwarderScreen<TelegramBotForwarder>(
-                            obs: widget.obs
-                        )
-                    )
-                ).then((_)
-                  => _setForwardersColors(widget.obs.reportReadiness())
+                    context, MaterialPageRoute(builder: (context)
+                          => ForwarderScreen<TelegramBotForwarder>(obs: widget.obs)
+                    )).then((_)
+                      => _setForwardersColors(widget.obs.reportReadiness())
                 ),
                 color: _tgBotBtnState,
                 child: Text(
@@ -136,15 +125,10 @@ class _HomePageState extends State<HomePage> {
               height: 50,
               child: new FlatButton(
                 onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context)
-                        => ForwarderScreen<HttpCallbackForwarder>(
-                            obs: widget.obs
-                        )
-                    )
-                ).then((_)
-                => _setForwardersColors(widget.obs.reportReadiness())
+                    context, MaterialPageRoute(builder: (context)
+                          => ForwarderScreen<HttpCallbackForwarder>(obs: widget.obs)
+                    )).then((_)
+                      => _setForwardersColors(widget.obs.reportReadiness())
                 ),
                 color: _callbackBtnState,
                 child: Text(
@@ -525,8 +509,7 @@ class _DeployedTelegramBotForwarderScreen
     );
     _tgHandleController.addListener(_onTgHandleTextChanged);
     _baseUrlController.addListener(_onBaseUrlTextChanged);
-    // Bot handles are the same as the user ones
-    _botHandleController.addListener(_onTgHandleTextChanged);
+    _botHandleController.addListener(_onBotHandleTextChanged);
 
     setState(() {
       _onTgHandleTextChanged();
