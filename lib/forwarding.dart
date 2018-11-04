@@ -224,8 +224,7 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
     var r = await http.get(
         "$_baseUrl/check_user${HttpForwarder.mapToUri(params)}"
     );
-    var code = r?.statusCode;
-    _isSetUp = code != null && code == 200;
+    _isSetUp = r?.statusCode == 200;
     return Future<bool>(() => isSetUp);
   }
 
