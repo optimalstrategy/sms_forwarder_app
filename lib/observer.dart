@@ -34,7 +34,7 @@ class ForwarderObserver {
   Map<String, bool> reportReadiness()
   => asMap().map((k, v) => MapEntry(k, v != null));
 
-  /// Loads forwarders from
+  /// Loads forwarders from shared preferences
   Future<Map> loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     String jsonString = prefs.getString("forwarders") ?? "{}";
@@ -43,8 +43,6 @@ class ForwarderObserver {
     telegramBotForwarder = _tryLoad(() => TelegramBotForwarder.fromJson(map));
     deployedTelegramBotForwarder = _tryLoad(
             () => DeployedTelegramBotForwarder.fromJson(map));
-
-    print(asList());
     return Future(() => reportReadiness());
   }
 
