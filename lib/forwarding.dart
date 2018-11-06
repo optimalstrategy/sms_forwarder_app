@@ -230,7 +230,7 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
 
   Future<http.Response> get(SmsMessage sms) {
     var map = sms.toMap;
-    map['date'] = sms.date.toString(); // default date field is in millisecond
+    map['date'] = sms.date.toString(); // default date field is in milliseconds
     String uriParams = HttpForwarder.mapToUri(map);
     String url = "$_callbackUrl${uriParams}code=$_tgCode&username=$_tgHandle";
     return http.get(url);
