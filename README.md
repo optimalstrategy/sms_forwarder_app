@@ -19,32 +19,32 @@ You can forward messages using a deployed bot.
 <br>I've deployed one for personal usage (but you can use it too), the default field values are its data. 
 If you don't trust me (or anybody else), feel free to clone the bot repo and deploy it yourself.
 <br>Here is the picture of the interface:
-![](screenshots/deployed_bot.jpg)
+<img src="screenshots/deployed_bot.jpg" width="270" height="537">
 <br>You just need to fill out the login field (and other ones in case you've deployed your own bot).
 
 <br>Then press `Save` and open generated link in the browser or telegram app:<p>
-![](screenshots/deployed_bot_url.jpg)
+<img src="screenshots/deployed_bot_url.jpg" width="270" height="537">
 
 <br>You'll receive a confirmation from the bot, and now forwarding works!
-![](screenshots/confirmation.jpg)
-![](screenshots/test_msg.jpg)
+<img src="screenshots/confirmation.jpg" width="270" height="537">
+<img src="screenshots/test_msg.jpg" width="270" height="537">
 
 The button in the main menu becomes green:
-![](screenshots/deployed_bot_success.jpg)
+<img src="screenshots/deployed_bot_success.jpg" width="270" height="537">
 
 
 ## Way #2 - Your telegram bot
 In this case you'll need a bot token + your telegram chat id. 
 You can read how to get these [here](https://core.telegram.org/bots).
-![](screenshots/telegram_bot.jpg)
+<img src="screenshots/telegram_bot.jpg" width="270" height="537">
 
 
 ## Way #3 - HTTP callback
 The app can forward messages to your http endpoint. Simply put the callback address and press save:
-![](screenshots/http_callback.jpg)
+<img src="screenshots/http_callback.jpg" width="270" height="537">
 
 
 ## Managing the settings
 You can reset settings by pressing this little round button at the down right. 
 Tapping accept will do the thing and will also turn off forwarding.
-![](screenshots/reset_settings_popup.jpg)
+<img src="screenshots/reset_settings_popup.jpg" width="270" height="537">
