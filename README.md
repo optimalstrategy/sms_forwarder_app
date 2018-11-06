@@ -23,7 +23,7 @@ If you don't trust me (or anybody else), feel free to clone the bot repo and dep
 <br>You just need to fill out the login field (and other ones in case you've deployed your own bot).
 
 Then press `Save` and open generated link in the browser or telegram app. The button in the main menu becomes green.
-<img src="screenshots/deployed_bot_success.jpg" width="270" height="537"> <img src="screenshots/deployed_bot_url.jpg" width="270" height="537">
+<img src="screenshots/deployed_bot_url.jpg" width="270" height="537"> <img src="screenshots/deployed_bot_success.jpg" width="270" height="537"> 
 
 <br>You'll receive a confirmation from the bot, and now forwarding works!
 <img src="screenshots/confirmation.jpg">
