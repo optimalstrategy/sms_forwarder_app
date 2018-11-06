@@ -3,8 +3,8 @@ I have two phones, one primary and the other just to receive SMS messages. Carry
 phones at once is such a pain, that's why I coded this app.
 
 ## Development and building 
-1. Install [flutter](https://flutter.io/docs/get-started/install).
-2. Follow instructions on [this page](https://flutter.io/docs/deployment/android). 
+1. Install [flutter](https://flutter.io/docs/get-started/install)
+2. Follow instructions on [this page](https://flutter.io/docs/deployment/android)
 
 ## The app supports 3 ways to forward your SMS messages:
 1. Using deployed telegram bot [link].
