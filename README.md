@@ -7,7 +7,7 @@ phones at once is such a pain, that's why I coded this app.
 2. Follow instructions on [this page](https://flutter.io/docs/deployment/android)
 
 ## The app supports 3 ways to forward your SMS messages:
-1. Using deployed telegram bot [link].
+1. Using [deployed telegram bot](https://github.com/OptimalStrategy/sms_forwarder_bot)
 2. Using your own telegram bot
 3. Using HTTP callback
 <p align="center">
@@ -17,7 +17,7 @@ phones at once is such a pain, that's why I coded this app.
 ## Way #1 - Deployed bot
 You can forward messages using a deployed bot.
 <br>I've deployed one for personal usage (but you can use it too), the default field values are its data. 
-If you don't trust me (or anybody else), feel free to clone the bot repo and deploy it yourself.
+If you don't trust me (or anybody else), feel free to clone the [bot repo](https://github.com/OptimalStrategy/sms_forwarder_bot) and deploy it yourself.
 <br>Here is the picture of the interface:
 <p align="center"><img src="screenshots/deployed_bot.jpg" width="270" height="537"></p>
 <br>You just need to fill out the login field (and other ones in case you've deployed your own bot).
