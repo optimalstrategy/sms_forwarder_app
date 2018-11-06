@@ -2,6 +2,9 @@
 I have two phones, one primary and the other just to receive SMS messages. Carrying and using two 
 phones at once is such a pain, that's why I coded this app.
 
+# Installation
+1. Simply download and install `sms_forwarder.apk` from the lateset [release](https://github.com/OptimalStrategy/sms_forwarder_app/releases).
+
 ## Development and building 
 1. Install [flutter](https://flutter.io/docs/get-started/install)
 2. Follow instructions on [this page](https://flutter.io/docs/deployment/android)
