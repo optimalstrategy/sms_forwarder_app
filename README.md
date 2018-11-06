@@ -20,7 +20,7 @@ You can forward messages using a deployed bot.
 If you don't trust me (or anybody else), feel free to clone the bot repo and deploy it yourself.
 <br>Here is the picture of the interface:
 ![](screenshots/deployed_bot.jpg)
-You just need to fill out the login field (and other ones in case you've deployed your own bot).
+<br>You just need to fill out the login field (and other ones in case you've deployed your own bot).
 
 <br>Then press `Save` and open generated link in the browser or telegram app:<p>
 ![](screenshots/deployed_bot_url.jpg)
