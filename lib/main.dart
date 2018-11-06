@@ -582,7 +582,7 @@ class _DeployedTelegramBotForwarderScreen
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Telegram bot settings'),
+        title: Text('Deployed bot settings'),
       ),
       body: Builder(builder: (BuildContext context) {
         return Center(
