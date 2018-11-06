@@ -11,7 +11,7 @@ phones at once is such a pain, that's why I coded this app.
 2. Using your own telegram bot
 3. Using HTTP callback
 
-![](screenshots/main_screen.jpg)
+<img src="screenshots/main_screen.jpg" width="270" height="537">
 
 
 ## Way #1 - Deployed bot
