@@ -16,16 +16,16 @@ You can forward messages using a deployed bot.
 If you don't trust me (or anybody else), feel free to clone the bot repo and deploy it yourself.
 <br>Here is the picture of the interface:
 ![](screenshots/deployed_bot.jpg)
-You just need to fill out the login field (and other ones in case you've deployed your own bot)
+You just need to fill out the login field (and other ones in case you've deployed your own bot).
 
-<br>Then press `Save` and open generated link in the browser or telegram app:
+<br>Then press `Save` and open generated link in the browser or telegram app:<p>
 ![](screenshots/deployed_bot_url.jpg)
 
 <br>You'll receive a confirmation from bot, and now everything works!
 ![](screenshots/confirmation.jpg)
 ![](screenshots/test_msg.jpg)
 
-The button in the main menu is now green:
+The button in the main menu became green:
 ![](screenshots/deployed_bot_success.jpg)
 
 
@@ -41,5 +41,5 @@ The app can forward messages to your http endpoint. Simply put the address and p
 
 ### Managing the settings
 You can reset settings by pressing on this little round bound at the down right. 
-Tapping accept will remove saved settings and will also turn off forwarding.
+Tapping accept will do the thing and will also turn off forwarding.
 ![](screenshots/reset_settings_popup.jpg)

@@ -186,7 +186,7 @@ abstract class _ForwarderScreenState <T extends AbstractForwarder>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("You're about to reset settings"),
+          title: Text("You're about to reset the settings"),
           content: Text("Reset settings of the forwarder?"),
           actions: <Widget>[
             FlatButton(
