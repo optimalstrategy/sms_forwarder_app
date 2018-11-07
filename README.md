@@ -1,5 +1,5 @@
 # SMS forwarder app
-I have two phones, one primary and the other just to receive SMS messages. Carrying and using two 
+I have two phones: primary and the other one just to receive SMS messages. Carrying and using two 
 phones at once is such a pain, that's why I coded this app.
 
 # Installation
