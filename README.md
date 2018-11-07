@@ -21,7 +21,7 @@ phones at once is such a pain, that's why I coded this app.
 You can forward messages using a deployed bot.
 <br>I've deployed one for personal usage (but you can use it too), the default field values are its data. 
 If you don't trust me (or anybody else), feel free to clone the [bot repo](https://github.com/OptimalStrategy/sms_forwarder_bot) and deploy it yourself.
-<br>Here is the picture of the interface:
+<br>Here is a picture of the interface:
 <p align="center"><img src="screenshots/deployed_bot.jpg" width="270" height="537"></p>
 <br>You just need to fill out the login field (and other ones in case you've deployed your own bot).
 
