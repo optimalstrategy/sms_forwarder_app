@@ -25,7 +25,7 @@ If you don't trust me (or anybody else), feel free to clone the [bot repo](https
 <p align="center"><img src="screenshots/deployed_bot.jpg" width="270" height="537"></p>
 <br>You just need to fill out the login field (and other ones in case you've deployed your own bot).
 
-Then press `Save` and open generated link in the browser or telegram app. The button in the main menu becomes green.
+Then press `Save` and open generated link in the browser or the telegram app. The button in the main menu becomes green.
 <p align="center">
   <img src="screenshots/deployed_bot_url.jpg" width="270" height="537"> <img src="screenshots/deployed_bot_success.jpg" width="270" height="537">
 </p>
