@@ -128,8 +128,9 @@ fabric.properties
 /.idea/libraries
 .DS_Store
 /build
-/captures
+/captures$$$
 GeneratedPluginRegistrant.java
 local.properties
 *.jks
 android/key.properties
+.flutter-plugins-dependencies
