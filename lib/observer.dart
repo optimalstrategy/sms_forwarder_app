@@ -1,7 +1,11 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sms/sms.dart';
+import 'package:sms_maintained/sms.dart';
 import 'forwarding.dart';
+
+import 'dart:core';
+
+import 'package:flutter/foundation.dart';
 
 class ForwarderObserver {
   // Supported forwarders
@@ -9,32 +13,43 @@ class ForwarderObserver {
   TelegramBotForwarder telegramBotForwarder;
   DeployedTelegramBotForwarder deployedTelegramBotForwarder;
 
-  // Reflections in flutter? WHEN?
-  /// Returns mapping (forwarder name -> forwarding result)
+  /// Returns the mapping (forwarder name -> forwarding result)
   Future<Map<String, bool>> forward(SmsMessage sms) async {
     Map<String, bool> map = {};
-    map["HttpCallbackForwarder"] = await httpCallbackForwarder?.forward(sms);
-    map["TelegramBotForwarder"] = await telegramBotForwarder?.forward(sms);
-    map["DeployedTelegramBotForwarder"] =
-      await deployedTelegramBotForwarder?.forward(sms);
+    map["HttpCallbackForwarder"] = await tryForward(httpCallbackForwarder, sms);
+    map["TelegramBotForwarder"] = await tryForward(telegramBotForwarder, sms);
+    map["DeployedTelegramBotForwarder"] = await
+      tryForward(deployedTelegramBotForwarder, sms);
+    debugPrint(map.toString());
     return map;
   }
 
-  /// Returns mapping (forwarder name -> forwarder object)
+  Future<bool> tryForward(AbstractForwarder fwd, SmsMessage sms) async {
+    try {
+      return await fwd?.forward(sms);
+    } catch (ex) {
+      debugPrint(
+          "Failed to forward the message with "
+              + fwd.runtimeType.toString() + ": " + ex.toString());
+      return false;
+    }
+  }
+
+  /// Returns the mapping (forwarder name -> forwarder object)
   Map<String, AbstractForwarder> asMap() => {
     "HttpCallbackForwarder": httpCallbackForwarder,
     "TelegramBotForwarder": telegramBotForwarder,
     "DeployedTelegramBotForwarder": deployedTelegramBotForwarder,
   };
 
-  /// Returns list of forwarder objects
+  /// Returns a list of forwarder objects
   List<AbstractForwarder> asList() => asMap().values.toList();
 
-  /// Returns mapping (forwarder name -> not null)
+  /// Returns the mapping (forwarder name -> not null)
   Map<String, bool> reportReadiness()
   => asMap().map((k, v) => MapEntry(k, v != null));
 
-  /// Loads forwarders from shared preferences
+  /// Loads the forwarders from shared preferences
   Future<Map> loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     String jsonString = prefs.getString("forwarders") ?? "{}";
@@ -46,7 +61,7 @@ class ForwarderObserver {
     return Future(() => reportReadiness());
   }
 
-  /// Attempts to load forwarder using provided closure [fromJson]
+  /// Attempts to load a forwarder using the provided closure [fromJson]
   T _tryLoad<T extends AbstractForwarder>(Function fromJson) {
     var instance;
     try {
@@ -55,17 +70,17 @@ class ForwarderObserver {
     return instance as T;
   }
 
-  /// Dumps forwarders to shared preferences
+  /// Dumps the forwarders to shared preferences
   void dumpToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     List<String> serialized = [];
     for (var fwd in asList()) {
       if (fwd == null) continue;
       String json = fwd.toJson();
-      // Remove trailing '{' and '}'
+      // Remove the trailing '{' and '}'
       serialized.add(json.substring(1, json.length - 1));
     }
-    // Dump serialized forwarders to shared preferences
+    // Dump the serialized forwarders to shared preferences
     var jsonStr = "{${serialized.join(', ')}}";
     prefs.setString("forwarders", jsonStr);
   }

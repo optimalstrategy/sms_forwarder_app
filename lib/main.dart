@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sms_forwarder/observer.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:sms/sms.dart';
+import 'package:sms_maintained/sms.dart';
 import 'forwarding.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(new MyApp(SmsReceiver(), ForwarderObserver()));
 }
 
@@ -13,22 +14,21 @@ class MyApp extends StatelessWidget {
   final SmsReceiver receiver;
   final ForwarderObserver obs;
 
-  /// Instantiates application
+  /// Instantiates the application
   MyApp(this.receiver, this.obs) {
-    // Set up listener
-    // Loading of forwarders will be done in HomePage
+    // Set up the sms listener
     receiver.onSmsReceived.listen(obs.forward);
   }
 
-  /// Creates main widget
+  /// Creates the main widget
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'Flutter Demo',
+      title: 'SMS Forwarder',
       theme: new ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: new HomePage(title: 'SMS forwarder', obs: this.obs),
+      home: new HomePage(title: 'SMS Forwarder', obs: this.obs),
     );
   }
 }
@@ -44,15 +44,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  MaterialColor _deployedBotBtnState = Colors.yellow;
-  MaterialColor _tgBotBtnState = Colors.yellow;
-  MaterialColor _callbackBtnState = Colors.yellow;
+  ColorSwatch<int> _deployedBotBtnState = Colors.yellow;
+  ColorSwatch<int> _tgBotBtnState = Colors.yellow;
+  ColorSwatch<int> _callbackBtnState = Colors.yellow;
 
   @override
   void initState() {
     super.initState();
 
-    // Load saved settings
+    // Load the saved forwarding settings
     _loadForwarders();
   }
 
@@ -63,12 +63,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _setForwardersColors(Map map) {
-    _deployedBotBtnState = map['DeployedTelegramBotForwarder']
-        ? Colors.lightGreenAccent : Colors.yellow;
-    _tgBotBtnState = map['TelegramBotForwarder']
-        ? Colors.lightGreenAccent : Colors.yellow;
-    _callbackBtnState = map['HttpCallbackForwarder']
-        ? Colors.lightGreenAccent : Colors.yellow;
+    setState(() {
+      _deployedBotBtnState = map['DeployedTelegramBotForwarder']
+          ? Colors.lightGreenAccent : Colors.yellow;
+      _tgBotBtnState = map['TelegramBotForwarder']
+          ? Colors.lightGreenAccent : Colors.yellow;
+      _callbackBtnState = map['HttpCallbackForwarder']
+          ? Colors.lightGreenAccent : Colors.yellow;
+    });
   }
 
   @override
@@ -94,7 +96,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   color: _deployedBotBtnState,
                   child: Text(
-                      "Forwarding using deployed bot",
+                      "Deployed Telegram Bot Forwarder",
                       style: new TextStyle(fontSize: 20),
                   ),
               ),
@@ -113,7 +115,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 color: _tgBotBtnState,
                 child: Text(
-                    "Forwarding using your tg bot",
+                    "Your Telegram Bot Forwarder",
                     style: new TextStyle(fontSize: 20),
                 ),
               ),
@@ -132,7 +134,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 color: _callbackBtnState,
                 child: Text(
-                    "Forwarding using http callback",
+                    "HTTP Callback Forwarder",
                     style: new TextStyle(fontSize: 20),
                 ),
               ),
@@ -151,7 +153,7 @@ class ForwarderScreen <T extends AbstractForwarder>
 
   final ForwarderObserver obs;
 
-  /// Returns state for the provided forwarder
+  /// Returns the state for the provided forwarder
   static _ForwarderScreenState
   _selectStateClass <T extends AbstractForwarder>() {
     if (T == HttpCallbackForwarder) {
@@ -170,7 +172,7 @@ class ForwarderScreen <T extends AbstractForwarder>
 
 abstract class _ForwarderScreenState <T extends AbstractForwarder>
     extends State<ForwarderScreen<T>> {
-  /// Checks if given string is a valid url
+  /// Checks if the given string is a valid url
   bool _checkValidUrl(String s) {
     var re = RegExp(
       r"https?:\/\/(((www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}"
@@ -180,21 +182,21 @@ abstract class _ForwarderScreenState <T extends AbstractForwarder>
     return re.hasMatch(s);
   }
 
-  /// Shows reset dialog
+  /// Shows the reset dialog
   Future _showResetDialog() {
     return showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("You're about to reset the settings"),
-          content: Text("Reset settings of the forwarder?"),
+          content: Text("Are you sure?"),
           actions: <Widget>[
             FlatButton(
-              child: Text("Cancel"),
+              child: Text("No, I'd like to keep the existing settings"),
               onPressed: () => Navigator.of(context).pop(),
             ),
             FlatButton(
-              child: Text("Accept", style: TextStyle(color: Colors.redAccent)),
+              child: Text("Yes", style: TextStyle(color: Colors.redAccent)),
               onPressed: () {
                 _resetSettings();
                 Navigator.of(context).pop();
@@ -206,23 +208,23 @@ abstract class _ForwarderScreenState <T extends AbstractForwarder>
     );
   }
 
-  /// Shows reset dialog and executes given callback after
+  /// Shows the reset dialog and executes the given callback after
   void _showResetDialogAndUpdate(void Function() cb) {
     _showResetDialog().then((_) => setState(cb));
   }
 
-  /// Saves settings to Shared Preferences
+  /// Saves t=e settings to Shared Preferences
   void _saveSettings();
 
-  /// Resets settings of the forwarder
+  /// Resets the settings of the forwarder
   void _resetSettings();
 }
 
 class _HttpCallbackForwarderState
     extends _ForwarderScreenState<HttpCallbackForwarder> {
-  /// Controls input box
+  /// Input textbox controller
   TextEditingController _controller;
-  /// Define color of borders
+  /// Define the color of the borders
   InputBorder _textFieldBorder;
   InputDecoration get _inputDecoration => InputDecoration(
     border: _textFieldBorder,
@@ -241,7 +243,7 @@ class _HttpCallbackForwarderState
     setState(_onTextChanged);
   }
 
-  /// Updates border color depending on field's value
+  /// Updates the border color depending on the field's value
   void _onTextChanged() {
     setState(() {
       _textFieldBorder = OutlineInputBorder(
@@ -256,14 +258,14 @@ class _HttpCallbackForwarderState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Http callback settings'),
+        title: Text('Http Callback Settings'),
       ),
       body: Builder(builder: (BuildContext context) {
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text("Specify http callback url:"),
+              Text("Specify an http callback url:"),
               Padding(padding: EdgeInsets.symmetric(vertical: 5)),
               Container(
                 width: 300,
@@ -289,7 +291,7 @@ class _HttpCallbackForwarderState
        onPressed: () => _showResetDialogAndUpdate(() {
          _controller.text = widget.obs.httpCallbackForwarder?.callbackUrl ?? "";
        }),
-       tooltip: "Reset settings",
+       tooltip: "Reset Settings",
        child: Icon(Icons.clear),
      ),
     );
@@ -354,7 +356,7 @@ class _TelegramBotForwarderScreen
     });
   }
 
-  /// Updates border color depending on token's value
+  /// Updates the border color depending on the token's value
   void _onTokenTextChanged() {
     setState(() {
       _tokenTextFieldBorder = OutlineInputBorder(
@@ -365,7 +367,7 @@ class _TelegramBotForwarderScreen
     });
   }
 
-  /// Updates border color depending on chatId's value
+  /// Updates the border color depending on chatId's value
   void _onChatIdTextChanged() {
     setState(() {
       _chatIdTextFieldBorder = OutlineInputBorder(
@@ -388,7 +390,7 @@ class _TelegramBotForwarderScreen
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Telegram bot settings'),
+        title: Text('Telegram Bot Settings'),
       ),
       body: Builder(builder: (BuildContext context) {
         return Center(
@@ -439,7 +441,7 @@ class _TelegramBotForwarderScreen
     );
   }
 
-  /// Updates settings of the forwarder and dumps forwarders to disk
+  /// Updates the settings of the forwarder and dumps all forwarders to disk
   @override
   void _saveSettings() {
     widget
@@ -452,7 +454,7 @@ class _TelegramBotForwarderScreen
     widget?.obs?.dumpToPrefs();
   }
 
-  /// Sets value of the forwarder to null
+  /// Sets the values of the forwarder to null
   @override
   void _resetSettings() {
     widget
@@ -464,7 +466,7 @@ class _TelegramBotForwarderScreen
 
 class _DeployedTelegramBotForwarderScreen
     extends _ForwarderScreenState<DeployedTelegramBotForwarder> {
-  /// Controls input boxes
+  /// Textboxes
   TextEditingController _tgHandleController;
   TextEditingController _baseUrlController;
   TextEditingController _botHandleController;
@@ -473,7 +475,7 @@ class _DeployedTelegramBotForwarderScreen
   InputBorder _baseUrlTextFieldBorder;
   InputBorder _botHandleTextFieldBorder;
 
-  /// Define colors of borders
+  /// Define the colors of the borders
   InputDecoration get _tgHandleInputDecoration => InputDecoration(
     border: _tgHandleTextFieldBorder,
     enabledBorder: _tgHandleTextFieldBorder,
@@ -518,7 +520,7 @@ class _DeployedTelegramBotForwarderScreen
     });
   }
 
-  /// Updates border color depending on token's value
+  /// Updates the border color depending on the token's value
   void _onTgHandleTextChanged() {
     _tgHandleController.value = _tgHandleController.value.copyWith(
         text: _tgHandleController.text.replaceAll("@", ""),
@@ -535,7 +537,7 @@ class _DeployedTelegramBotForwarderScreen
     });
   }
 
-  /// Updates border color depending on chatId's value
+  /// Updates the border color depending on chatId's value
   void _onBaseUrlTextChanged() {
     setState(() {
       _baseUrlTextFieldBorder = OutlineInputBorder(
@@ -546,7 +548,7 @@ class _DeployedTelegramBotForwarderScreen
     });
   }
 
-  /// Updates border color depending on botHandle's value
+  /// Updates the border color depending on botHandle's value
   void _onBotHandleTextChanged() {
     _botHandleController.value = _botHandleController.value.copyWith(
       text: _botHandleController.text.replaceAll("@", ""),
@@ -564,7 +566,7 @@ class _DeployedTelegramBotForwarderScreen
 
   }
 
-  /// Returns true if handle matches required length
+  /// Returns true if the handle length is correct
   bool _checkValidHandle(String handle)
     => handle.length >= 5 && handle.length <= 32;
 
@@ -582,7 +584,7 @@ class _DeployedTelegramBotForwarderScreen
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Deployed bot settings'),
+        title: Text('Deployed Bot Settings'),
       ),
       body: Builder(builder: (BuildContext context) {
         return Center(
@@ -603,7 +605,7 @@ class _DeployedTelegramBotForwarderScreen
                   ),
                 ),
                 Padding(padding: EdgeInsets.symmetric(vertical: 3)),
-                Text("Specify broker url:"),
+                Text("Specify a broker url:"),
                 Padding(padding: EdgeInsets.symmetric(vertical: 3)),
                 Container(
                   width: 300,
@@ -613,7 +615,7 @@ class _DeployedTelegramBotForwarderScreen
                   ),
                 ),
                 Padding(padding: EdgeInsets.symmetric(vertical: 4)),
-                Text("Specify bot @handle:"),
+                Text("Specify the broker's bot @handle:"),
                 Padding(padding: EdgeInsets.symmetric(vertical: 4)),
                 Container(
                   width: 300,
@@ -643,7 +645,7 @@ class _DeployedTelegramBotForwarderScreen
           _baseUrlController.text =
               widget.obs.deployedTelegramBotForwarder?.baseUrl ?? "";
         }),
-        tooltip: "Reset settings",
+        tooltip: "Reset Settings",
         child: Icon(Icons.clear),
       ),
     );
@@ -656,11 +658,11 @@ class _DeployedTelegramBotForwarderScreen
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Open link in the browser or copy to clipboard:"),
+          title: Text("Open the link in the browser or copy to the clipboard:"),
           content: Text(url),
           actions: <Widget>[
             FlatButton(
-              child: Text("Open in browser"),
+              child: Text("Open in Browser"),
               onPressed: _canLaunch ? () {
                 launch(url);
                 Navigator.of(context).pop();
@@ -681,7 +683,7 @@ class _DeployedTelegramBotForwarderScreen
     );
   }
 
-  /// Updates settings of the forwarder and dumps forwarders to disk
+  /// Updates the settings of the forwarder and dumps all forwarders to disk
   @override
   void _saveSettings() {
     widget
@@ -695,7 +697,7 @@ class _DeployedTelegramBotForwarderScreen
     widget?.obs?.dumpToPrefs();
   }
 
-  /// Sets value of the forwarder to null
+  /// Sets the value of the forwarder to null
   @override
   void _resetSettings() {
     widget

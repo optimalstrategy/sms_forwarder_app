@@ -3,12 +3,12 @@ import 'dart:core';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:sms/sms.dart';
+import 'package:sms_maintained/sms.dart';
 import 'package:flutter/foundation.dart';
 
-/// Defines forwarder interface.
+/// Defines the forwarder interface.
 abstract class AbstractForwarder {
-  /// Forwards sms to a user
+  /// Forwards an sms to a user
   Future<bool> forward(SmsMessage sms);
 
   /// Unnamed constructor
