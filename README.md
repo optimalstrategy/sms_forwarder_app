@@ -16,7 +16,7 @@ This app can forward SMS messages to a Telegram bot or an HTTP endpoint.
   <img src="screenshots/main_screen.jpg" width="270" height="537">
 </p>
 
-## Option #1 - Deployed bot
+## Option #1 - Deployed Bot
 You can forward the messages using a deployed bot.
 <br>I've deployed one for personal usage (but you can use it too), the default field values contain its data.
 If you don't trust me (or anybody else), feel free to clone the [bot repo](https://github.com/OptimalStrategy/sms_forwarder_bot) and deploy it yourself.
@@ -33,14 +33,14 @@ Then press `Save` and open the generated link in the browser or the telegram app
 <img src="screenshots/confirmation.jpg">
 <img src="screenshots/test_msg.jpg">
 
-## Option #2 - Your telegram bot
+## Option #2 - Your Telegram Bot
 In this case you'll need a bot token + your telegram chat id.
 You can read how to get these [here](https://core.telegram.org/bots).
 <p align="center">
   <img src="screenshots/telegram_bot.jpg" width="270" height="537">
 </p>
 
-## Option #3 - HTTP callback
+## Option #3 - HTTP Callback
 The app can forward messages to your http endpoint. Simply put the callback address and press save:
 <p align="center">
   <img src="screenshots/http_callback.jpg" width="270" height="537">
@@ -48,7 +48,7 @@ The app can forward messages to your http endpoint. Simply put the callback addr
 
 ## Managing Settings
 You can reset the settings by pressing the green round button in the bottom right corner.
-Tapp accept to confirm. This will also turn off forwarding.
+Tap accept to confirm. This will also turn off forwarding.
 <p align="center">
   <img src="screenshots/reset_settings_popup.jpg" width="270" height="537">
 </p>
