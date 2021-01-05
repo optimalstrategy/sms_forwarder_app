@@ -44,9 +44,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Color _deployedBotBtnState = Colors.yellow;
-  Color _tgBotBtnState = Colors.yellow;
-  Color _callbackBtnState = Colors.yellow;
+  MaterialColor _deployedBotBtnState = Colors.yellow;
+  MaterialColor _tgBotBtnState = Colors.yellow;
+  MaterialColor _callbackBtnState = Colors.yellow;
 
   @override
   void initState() {
@@ -207,7 +207,7 @@ abstract class _ForwarderScreenState <T extends AbstractForwarder>
   }
 
   /// Shows reset dialog and executes given callback after
-  void _showResetDialogAndUpdate(VoidCallback cb) {
+  void _showResetDialogAndUpdate(void Function() cb) {
     _showResetDialog().then((_) => setState(cb));
   }
 
