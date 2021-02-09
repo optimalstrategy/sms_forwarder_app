@@ -317,9 +317,9 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
     var map = sms.toMap;
     map['date'] =
         sms.date.toString(); // the date field is in milliseconds by default
-    String uriParams = HttpForwarder.mapToUri(map);
-    String url = "$_callbackUrl${uriParams}code=$_tgCode&username=$_tgHandle";
-    return http.post(url);
+    String payload = HttpForwarder.mapToJson(map);
+    String url = "$_callbackUrl?code=$_tgCode&username=$_tgHandle";
+    return http.post(url, body: payload);
   }
 
   /// Generates a random 8-character code.
