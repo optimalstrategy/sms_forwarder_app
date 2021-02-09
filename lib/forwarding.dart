@@ -49,13 +49,23 @@ abstract class HttpForwarder implements AbstractForwarder {
   /// `?msg=test%20message&code=10&`
   static String mapToUri(Map map) {
     String uri = "?";
-    var body = map
-      ..removeWhere((k, v) => k == 'thread_id')
-      // Cast each field to string
-      ..map((k, v) => MapEntry(k, v.toString()));
+    var body = _castMap(map);
     // Encode and build the uri parameters
     body.forEach((k, v) => uri += "$k=${Uri.encodeComponent(v.toString())}&");
     return uri;
+  }
+
+  /// Casts all keys and values in the map to String and serializes
+  /// the resulting map as JSON.
+  static String mapToJson(Map map) => json.encode(_castMap(map));
+
+  /// Casts all keys and values in the map to String. Removes the entry with
+  /// the key thread_id.
+  static Map<String, String> _castMap(Map map) {
+    map.remove('thread_id');
+    return Map.from(map.map(
+        // Cast each field to string
+        (k, v) => MapEntry(k.toString(), v.toString())));
   }
 
   /// Should make an http request and return the request object.
@@ -68,8 +78,8 @@ abstract class HttpForwarder implements AbstractForwarder {
     return Future<bool>(() async {
       var response = await send(sms);
       // TODO: remove debug prints
-      // debugPrint("Response status: ${response.statusCode}.");
-      // debugPrint("Response body: \'${response.body}\'.");
+      debugPrint("Response status: ${response.statusCode}.");
+      debugPrint("Response body: \'${response.body}\'.");
       return response.statusCode == 200;
     });
   }
@@ -182,8 +192,8 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
         var url = "$_callbackUrl$uriParams";
         // Perform the request using the required method
         return method == HttpMethod.POST
-            ? http.post(url, body: payload)
-            : http.put(url, body: payload);
+            ? http.post(url, body: HttpForwarder.mapToJson(payload))
+            : http.put(url, body: HttpForwarder.mapToJson(payload));
     }
   }
 }
@@ -258,8 +268,11 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
 
   // Getters
   bool get isSetUp => _isSetUp;
+
   String get baseUrl => _baseUrl;
+
   String get tgHandle => _tgHandle;
+
   String get botHandle => _botHandle;
 
   /// Default constructor
