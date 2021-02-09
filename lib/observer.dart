@@ -18,8 +18,8 @@ class ForwarderObserver {
     Map<String, bool> map = {};
     map["HttpCallbackForwarder"] = await tryForward(httpCallbackForwarder, sms);
     map["TelegramBotForwarder"] = await tryForward(telegramBotForwarder, sms);
-    map["DeployedTelegramBotForwarder"] = await
-      tryForward(deployedTelegramBotForwarder, sms);
+    map["DeployedTelegramBotForwarder"] =
+        await tryForward(deployedTelegramBotForwarder, sms);
     debugPrint(map.toString());
     return map;
   }
@@ -28,40 +28,41 @@ class ForwarderObserver {
     try {
       return await fwd?.forward(sms);
     } catch (ex) {
-      debugPrint(
-          "Failed to forward the message with "
-              + fwd.runtimeType.toString() + ": " + ex.toString());
+      debugPrint("Failed to forward the message with " +
+          fwd.runtimeType.toString() +
+          ": " +
+          ex.toString());
       return false;
     }
   }
 
   /// Returns the mapping (forwarder name -> forwarder object)
   Map<String, AbstractForwarder> asMap() => {
-    "HttpCallbackForwarder": httpCallbackForwarder,
-    "TelegramBotForwarder": telegramBotForwarder,
-    "DeployedTelegramBotForwarder": deployedTelegramBotForwarder,
-  };
+        "HttpCallbackForwarder": httpCallbackForwarder,
+        "TelegramBotForwarder": telegramBotForwarder,
+        "DeployedTelegramBotForwarder": deployedTelegramBotForwarder,
+      };
 
-  /// Returns a list of forwarder objects
+  /// Returns a list of forwarder objects.
   List<AbstractForwarder> asList() => asMap().values.toList();
 
   /// Returns the mapping (forwarder name -> not null)
-  Map<String, bool> reportReadiness()
-  => asMap().map((k, v) => MapEntry(k, v != null));
+  Map<String, bool> reportReadiness() =>
+      asMap().map((k, v) => MapEntry(k, v != null));
 
-  /// Loads the forwarders from shared preferences
+  /// Loads the forwarders from shared preferences.
   Future<Map> loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     String jsonString = prefs.getString("forwarders") ?? "{}";
     var map = json.decode(jsonString);
     httpCallbackForwarder = _tryLoad(() => HttpCallbackForwarder.fromJson(map));
     telegramBotForwarder = _tryLoad(() => TelegramBotForwarder.fromJson(map));
-    deployedTelegramBotForwarder = _tryLoad(
-            () => DeployedTelegramBotForwarder.fromJson(map));
+    deployedTelegramBotForwarder =
+        _tryLoad(() => DeployedTelegramBotForwarder.fromJson(map));
     return Future(() => reportReadiness());
   }
 
-  /// Attempts to load a forwarder using the provided closure [fromJson]
+  /// Attempts to load a forwarder of type [T] using the provided closure [fromJson].
   T _tryLoad<T extends AbstractForwarder>(Function fromJson) {
     var instance;
     try {
@@ -70,7 +71,7 @@ class ForwarderObserver {
     return instance as T;
   }
 
-  /// Dumps the forwarders to shared preferences
+  /// Dumps the forwarders to shared preferences.
   void dumpToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     List<String> serialized = [];
@@ -80,7 +81,6 @@ class ForwarderObserver {
       // Remove the trailing '{' and '}'
       serialized.add(json.substring(1, json.length - 1));
     }
-    // Dump the serialized forwarders to shared preferences
     var jsonStr = "{${serialized.join(', ')}}";
     prefs.setString("forwarders", jsonStr);
   }
