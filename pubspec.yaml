@@ -1,12 +1,15 @@
 name: sms_forwarder
 description: An SMS forwarding application.
-version: 1.3.0
+version: 1.4.0
+
+environment:
+  sdk: '>=2.10.0 <3.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
 
-  sms_maintained: ^0.2.5
+  telephony: ^0.1.0
   http: ^0.12.0
   shared_preferences: ^0.4.3
   url_launcher: ^4.0.1
