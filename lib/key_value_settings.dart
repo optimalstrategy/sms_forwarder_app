@@ -197,7 +197,6 @@ class _KeyValuePairWidgetState extends State<_KeyValuePairWidget> {
 
   @override
   Widget build(BuildContext context) {
-    var pairs = _parentState.pairs;
     return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
       Container(
           width: 125,
