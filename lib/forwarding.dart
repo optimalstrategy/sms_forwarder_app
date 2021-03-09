@@ -3,8 +3,27 @@ import 'dart:core';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:sms_maintained/sms.dart';
+import 'package:telephony/telephony.dart';
 import 'package:flutter/foundation.dart';
+
+extension ToMap on SmsMessage {
+  Map get toMap {
+    return {
+      "id": this.id,
+      "address": this.address,
+      "body": this.body,
+      "date": this.date,
+      "dateSent": this.dateSent,
+      "read": this.read,
+      "seen": this.seen,
+      "subject": this.subject,
+      "subscriptionId": this.subscriptionId,
+      "threadId": this.threadId,
+      "type": this.type,
+      "status": this.status,
+    };
+  }
+}
 
 /// Defines the forwarder interface.
 abstract class AbstractForwarder {
@@ -60,9 +79,9 @@ abstract class HttpForwarder implements AbstractForwarder {
   static String mapToJson(Map map) => json.encode(_castMap(map));
 
   /// Casts all keys and values in the map to String. Removes the entry with
-  /// the key thread_id.
+  /// the key threadId.
   static Map<String, String> _castMap(Map map) {
-    map.remove('thread_id');
+    map.remove('threadId');
     return Map.from(map.map(
         // Cast each field to string
         (k, v) => MapEntry(k.toString(), v.toString())));
@@ -176,20 +195,20 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
     switch (method) {
       case HttpMethod.GET:
         // Convert the sms to JSON and merge it with the uri payload
-        var smsData = sms.toMap;
+        final smsData = sms.toMap;
         smsData.addAll(uriPayload);
         // Then URI encode the map and perform the request
-        String uriParams = HttpForwarder.mapToUri(smsData);
+        final uriParams = HttpForwarder.mapToUri(smsData);
         return http.get("$_callbackUrl$uriParams");
 
       case HttpMethod.POST:
       case HttpMethod.PUT:
         // Convert the sms to json and merge it with the json payload
-        var payload = sms.toMap;
+        final payload = sms.toMap;
         payload.addAll(jsonPayload);
         // URI encode the uri payload and append it to the url
-        var uriParams = HttpForwarder.mapToUri(uriPayload);
-        var url = "$_callbackUrl$uriParams";
+        final uriParams = HttpForwarder.mapToUri(uriPayload);
+        final url = "$_callbackUrl$uriParams";
         // Perform the request using the required method
         return method == HttpMethod.POST
             ? http.post(url, body: HttpForwarder.mapToJson(payload))
@@ -240,13 +259,14 @@ class TelegramBotForwarder extends AbstractForwarder with HttpForwarder {
   /// Sends the SMS data to the user with [_chatId].
   @override
   Future<http.Response> send(SmsMessage sms) {
+    final date = DateTime.fromMillisecondsSinceEpoch(sms.date);
     // Encode message
     String uriParams = HttpForwarder.mapToUri({
       "chat_id": _chatId,
       "text": "New SMS message from ${sms.address}:\n${sms.body}\n\n"
-          "Date: ${sms.date}."
+          "Date: $date."
     });
-    String url = this.method("sendMessage");
+    final url = this.method("sendMessage");
     return http.post("$url$uriParams");
   }
 
@@ -305,8 +325,8 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
 
   /// Checks if the user with [_tgHandle] exists on the server.
   Future<bool> checkSetupURL() async {
-    var params = {"username": _tgHandle, "code": _tgCode};
-    var r =
+    final params = {"username": _tgHandle, "code": _tgCode};
+    final r =
         await http.get("$_baseUrl/check_user${HttpForwarder.mapToUri(params)}");
     _isSetUp = r?.statusCode == 200;
     return Future<bool>(() => isSetUp);
@@ -314,9 +334,9 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
 
   /// Sends the SMS data to the server via a POST request.
   Future<http.Response> send(SmsMessage sms) {
-    var map = sms.toMap;
-    map['date'] =
-        sms.date.toString(); // the date field is in milliseconds by default
+    final map = sms.toMap;
+    final date = DateTime.fromMillisecondsSinceEpoch(sms.date);
+    map['date'] = date.toString();
     String payload = HttpForwarder.mapToJson(map);
     String url = "$_callbackUrl?code=$_tgCode&username=$_tgHandle";
     return http.post(url, body: payload);
@@ -324,7 +344,7 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
 
   /// Generates a random 8-character code.
   String _genCode() {
-    var rand = Random();
+    final rand = Random();
     return String.fromCharCodes(
         new List.generate(8, (_) => rand.nextInt(26) + 65));
   }
@@ -332,7 +352,7 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
   /// Dumps the forwarder's settings to json.
   @override
   String toJson() {
-    var fields = {
+    final fields = {
       "tgCode": _tgCode,
       "baseUrl": _baseUrl,
       "tgHandle": _tgHandle,

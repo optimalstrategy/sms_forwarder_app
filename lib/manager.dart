@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sms_maintained/sms.dart';
+import 'package:telephony/telephony.dart';
 import 'forwarding.dart';
 
 import 'dart:core';
 
 import 'package:flutter/foundation.dart';
 
-class ForwarderObserver {
+class ForwarderManager {
   // Supported forwarders
   HttpCallbackForwarder httpCallbackForwarder;
   TelegramBotForwarder telegramBotForwarder;
@@ -54,12 +54,30 @@ class ForwarderObserver {
   Future<Map> loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     String jsonString = prefs.getString("forwarders") ?? "{}";
+    loadFromJson(jsonString);
+    return Future(() => reportReadiness());
+  }
+
+  /// Loads the forwarders from a json.
+  Map loadFromJson(String jsonString) {
     var map = json.decode(jsonString);
     httpCallbackForwarder = _tryLoad(() => HttpCallbackForwarder.fromJson(map));
     telegramBotForwarder = _tryLoad(() => TelegramBotForwarder.fromJson(map));
     deployedTelegramBotForwarder =
         _tryLoad(() => DeployedTelegramBotForwarder.fromJson(map));
-    return Future(() => reportReadiness());
+    return reportReadiness();
+  }
+
+  /// Dumps the forwarder settings to json.
+  String dumpToJson() {
+    List<String> serialized = [];
+    for (var fwd in asList()) {
+      if (fwd == null) continue;
+      String json = fwd.toJson();
+      // Remove the trailing '{' and '}'
+      serialized.add(json.substring(1, json.length - 1));
+    }
+    return "{${serialized.join(', ')}}";
   }
 
   /// Attempts to load a forwarder of type [T] using the provided closure [fromJson].
@@ -74,14 +92,7 @@ class ForwarderObserver {
   /// Dumps the forwarders to shared preferences.
   void dumpToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    List<String> serialized = [];
-    for (var fwd in asList()) {
-      if (fwd == null) continue;
-      String json = fwd.toJson();
-      // Remove the trailing '{' and '}'
-      serialized.add(json.substring(1, json.length - 1));
-    }
-    var jsonStr = "{${serialized.join(', ')}}";
+    var jsonStr = dumpToJson();
     prefs.setString("forwarders", jsonStr);
   }
 }

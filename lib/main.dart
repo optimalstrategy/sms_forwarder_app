@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sms_forwarder/observer.dart';
+import 'package:telephony/telephony.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:sms_maintained/sms.dart';
 
 import 'forwarding.dart';
-import 'KeyValueSettings.dart';
+import 'key_value_settings.dart';
+import 'background_forwarder.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(new MyApp(SmsReceiver(), ForwarderObserver()));
+  runApp(new MyApp(new BackgroundForwarder(Telephony.instance)));
 }
 
 class MyApp extends StatelessWidget {
-  final SmsReceiver receiver;
-  final ForwarderObserver obs;
+  final BackgroundForwarder fwd;
 
-  MyApp(this.receiver, this.obs) {
-    // Set up the sms listener
-    receiver.onSmsReceived.listen(obs.forward);
-  }
+  MyApp(this.fwd);
 
   @override
   Widget build(BuildContext context) {
@@ -28,25 +24,28 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: new HomePage(title: 'SMS Forwarder (v1.3.0)', obs: this.obs),
+      home: new HomePage(title: 'SMS Forwarder (v1.4.0)', fwd: this.fwd),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  HomePage({Key key, this.title, this.obs}) : super(key: key);
+  HomePage({Key key, this.title, this.fwd}) : super(key: key);
 
   final String title;
-  final ForwarderObserver obs;
+  final BackgroundForwarder fwd;
 
   @override
   _HomePageState createState() => new _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  ColorSwatch<int> _deployedBotBtnState = Colors.yellow;
-  ColorSwatch<int> _tgBotBtnState = Colors.yellow;
-  ColorSwatch<int> _callbackBtnState = Colors.yellow;
+  static final Color _greenColor = Colors.green[500];
+  static final Color _yellowColor = Colors.yellow[500];
+
+  Color _deployedBotBtnState = _yellowColor;
+  Color _tgBotBtnState = _yellowColor;
+  Color _callbackBtnState = _yellowColor;
 
   @override
   void initState() {
@@ -58,21 +57,27 @@ class _HomePageState extends State<HomePage> {
 
   /// Loads forwarders' settings and updates the buttons.
   void _loadForwarders() async {
-    var map = await widget.obs.loadFromPrefs();
+    var map = await widget.fwd.loadFromPrefs();
     setState(() => _setForwardersColors(map));
   }
 
   void _setForwardersColors(Map map) {
     setState(() {
-      _deployedBotBtnState = map['DeployedTelegramBotForwarder']
-          ? Colors.lightGreenAccent
-          : Colors.yellow;
-      _tgBotBtnState =
-          map['TelegramBotForwarder'] ? Colors.lightGreenAccent : Colors.yellow;
-      _callbackBtnState = map['HttpCallbackForwarder']
-          ? Colors.lightGreenAccent
-          : Colors.yellow;
+      _deployedBotBtnState =
+          map['DeployedTelegramBotForwarder'] ? _greenColor : _yellowColor;
+      _tgBotBtnState = map['TelegramBotForwarder'] ? _greenColor : _yellowColor;
+      _callbackBtnState =
+          map['HttpCallbackForwarder'] ? _greenColor : _yellowColor;
     });
+  }
+
+  ButtonStyle _forwarderButtonStyle(Color color) {
+    return TextButton.styleFrom(
+        primary: Colors.black,
+        backgroundColor: color,
+        padding: EdgeInsets.all(12),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(1))));
   }
 
   @override
@@ -89,15 +94,15 @@ class _HomePageState extends State<HomePage> {
             new ButtonTheme(
               minWidth: 320,
               height: 50,
-              child: new FlatButton(
+              child: new TextButton(
                 onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
                             ForwarderScreen<DeployedTelegramBotForwarder>(
-                                obs: widget.obs))).then(
-                    (_) => _setForwardersColors(widget.obs.reportReadiness())),
-                color: _deployedBotBtnState,
+                                fwd: widget.fwd))).then(
+                    (_) => _setForwardersColors(widget.fwd.reportReadiness())),
+                style: _forwarderButtonStyle(_deployedBotBtnState),
                 child: Text(
                   "Deployed Telegram Bot Forwarder",
                   style: new TextStyle(fontSize: 20),
@@ -109,15 +114,15 @@ class _HomePageState extends State<HomePage> {
             new ButtonTheme(
               minWidth: 320,
               height: 50,
-              child: new FlatButton(
+              child: new TextButton(
                 onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
                             ForwarderScreen<TelegramBotForwarder>(
-                                obs: widget.obs))).then(
-                    (_) => _setForwardersColors(widget.obs.reportReadiness())),
-                color: _tgBotBtnState,
+                                fwd: widget.fwd))).then(
+                    (_) => _setForwardersColors(widget.fwd.reportReadiness())),
+                style: _forwarderButtonStyle(_tgBotBtnState),
                 child: Text(
                   "Your Telegram Bot Forwarder",
                   style: new TextStyle(fontSize: 20),
@@ -129,15 +134,15 @@ class _HomePageState extends State<HomePage> {
             new ButtonTheme(
               minWidth: 320,
               height: 50,
-              child: new FlatButton(
+              child: new TextButton(
                 onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
                             ForwarderScreen<HttpCallbackForwarder>(
-                                obs: widget.obs))).then(
-                    (_) => _setForwardersColors(widget.obs.reportReadiness())),
-                color: _callbackBtnState,
+                                fwd: widget.fwd))).then(
+                    (_) => _setForwardersColors(widget.fwd.reportReadiness())),
+                style: _forwarderButtonStyle(_callbackBtnState),
                 child: Text(
                   "HTTP Callback Forwarder",
                   style: new TextStyle(fontSize: 20),
@@ -152,9 +157,9 @@ class _HomePageState extends State<HomePage> {
 }
 
 class ForwarderScreen<T extends AbstractForwarder> extends StatefulWidget {
-  const ForwarderScreen({Key key, this.obs}) : super(key: key);
+  const ForwarderScreen({Key key, this.fwd}) : super(key: key);
 
-  final ForwarderObserver obs;
+  final BackgroundForwarder fwd;
 
   /// Returns the state for the provided forwarder.
   static _ForwarderScreenState
@@ -194,11 +199,11 @@ abstract class _ForwarderScreenState<T extends AbstractForwarder>
           title: Text("You're about to reset the settings"),
           content: Text("Are you sure?"),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               child: Text("No, I'd like to keep the existing settings"),
               onPressed: () => Navigator.of(context).pop(),
             ),
-            FlatButton(
+            TextButton(
               child: Text("Yes", style: TextStyle(color: Colors.redAccent)),
               onPressed: () {
                 _resetSettings();
@@ -245,7 +250,7 @@ class _HttpCallbackForwarderState
   @override
   void initState() {
     super.initState();
-    final fwd = widget.obs?.httpCallbackForwarder;
+    final fwd = widget.fwd?.httpCallbackForwarder;
     _controller = TextEditingController(text: fwd?.callbackUrl);
     _method = fwd?.method ?? HttpMethod.POST;
     _uriParams = Map.from(fwd?.uriPayload ?? {});
@@ -318,28 +323,28 @@ class _HttpCallbackForwarderState
             ]),
             Padding(padding: EdgeInsets.symmetric(vertical: 5)),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-              RaisedButton(
+              ElevatedButton(
                   child: Text('URI Params'),
                   onPressed: () => showDialog(
                       context: context,
-                      child: KeyValuePairSettingsScreen(
+                      builder: (_) => KeyValuePairSettingsScreen(
                           "URI Params", _uriParams))),
               Padding(padding: EdgeInsets.symmetric(horizontal: 5)),
-              RaisedButton(
+              ElevatedButton(
                   child: Text('JSON Payload'),
                   onPressed: () => showDialog(
                       context: context,
-                      child: KeyValuePairSettingsScreen(
+                      builder: (_) => KeyValuePairSettingsScreen(
                           "JSON Payload", _jsonParams)))
             ]),
             Padding(padding: EdgeInsets.symmetric(vertical: 2)),
-            RaisedButton(
+            ElevatedButton(
                 child: Text('Save'),
                 onPressed: !_checkValidUrl(_controller.text)
                     ? null
                     : () {
                         _saveSettings();
-                        Scaffold.of(context).showSnackBar(new SnackBar(
+                        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
                           content: new Text("Saved"),
                         ));
                       }),
@@ -349,7 +354,7 @@ class _HttpCallbackForwarderState
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showResetDialogAndUpdate(() {
           _controller.text =
-              widget.obs.httpCallbackForwarder?.callbackUrl ?? "";
+              widget.fwd.httpCallbackForwarder?.callbackUrl ?? "";
         }),
         tooltip: "Reset Settings",
         child: Icon(Icons.clear),
@@ -359,19 +364,19 @@ class _HttpCallbackForwarderState
 
   /// Updates the settings of the forwarder and dumps all forwarders to disk.
   @override
-  void _saveSettings() {
-    widget?.obs?.httpCallbackForwarder = HttpCallbackForwarder(_controller.text,
+  void _saveSettings() async {
+    widget?.fwd?.httpCallbackForwarder = HttpCallbackForwarder(_controller.text,
         method: _method, uriPayload: _uriParams, jsonPayload: _jsonParams);
-    widget?.obs?.dumpToPrefs();
+    widget?.fwd?.dumpToPrefs();
   }
 
   /// Removes the forwarder and dumps the rest of the forwarders to disk.
   @override
-  void _resetSettings() {
+  void _resetSettings() async {
     _uriParams.clear();
     _jsonParams.clear();
-    widget?.obs?.httpCallbackForwarder = null;
-    widget?.obs?.dumpToPrefs();
+    widget?.fwd?.httpCallbackForwarder = null;
+    widget?.fwd?.dumpToPrefs();
   }
 }
 
@@ -402,9 +407,9 @@ class _TelegramBotForwarderScreen
   void initState() {
     super.initState();
     _tokenController = TextEditingController(
-        text: widget.obs?.telegramBotForwarder?.token ?? "");
+        text: widget.fwd?.telegramBotForwarder?.token ?? "");
     _chatIdController = TextEditingController(
-        text: widget.obs?.telegramBotForwarder?.chatId?.toString() ?? "");
+        text: widget.fwd?.telegramBotForwarder?.chatId?.toString() ?? "");
     _tokenController.addListener(_onTokenTextChanged);
     _chatIdController.addListener(_onChatIdTextChanged);
 
@@ -473,13 +478,13 @@ class _TelegramBotForwarderScreen
                 controller: _tokenController,
               ),
             ),
-            RaisedButton(
+            ElevatedButton(
                 child: Text('Save'),
                 onPressed: !_checkAllIsValid()
                     ? null
                     : () {
                         _saveSettings();
-                        Scaffold.of(context).showSnackBar(new SnackBar(
+                        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
                           content: new Text("Saved"),
                         ));
                       }),
@@ -488,9 +493,9 @@ class _TelegramBotForwarderScreen
       }),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showResetDialogAndUpdate(() {
-          _tokenController.text = widget.obs?.telegramBotForwarder?.token ?? "";
+          _tokenController.text = widget.fwd?.telegramBotForwarder?.token ?? "";
           _chatIdController.text =
-              widget.obs?.telegramBotForwarder?.chatId?.toString() ?? "";
+              widget.fwd?.telegramBotForwarder?.chatId?.toString() ?? "";
         }),
         tooltip: "Reset settings",
         child: Icon(Icons.clear),
@@ -500,17 +505,17 @@ class _TelegramBotForwarderScreen
 
   /// Updates the settings of the forwarder and dumps all forwarders to disk
   @override
-  void _saveSettings() {
-    widget?.obs?.telegramBotForwarder = TelegramBotForwarder(
+  void _saveSettings() async {
+    widget?.fwd?.telegramBotForwarder = TelegramBotForwarder(
         _tokenController.text, int.tryParse(_chatIdController.text));
-    widget?.obs?.dumpToPrefs();
+    widget?.fwd?.dumpToPrefs();
   }
 
   /// Sets the values of the forwarder to null
   @override
-  void _resetSettings() {
-    widget?.obs?.telegramBotForwarder = null;
-    widget?.obs?.dumpToPrefs();
+  void _resetSettings() async {
+    widget?.fwd?.telegramBotForwarder = null;
+    widget?.fwd?.dumpToPrefs();
   }
 }
 
@@ -551,12 +556,12 @@ class _DeployedTelegramBotForwarderScreen
   void initState() {
     super.initState();
     _tgHandleController = TextEditingController(
-        text: widget.obs?.deployedTelegramBotForwarder?.tgHandle ?? "");
+        text: widget.fwd?.deployedTelegramBotForwarder?.tgHandle ?? "");
     _baseUrlController = TextEditingController(
-        text: widget.obs?.deployedTelegramBotForwarder?.baseUrl ??
+        text: widget.fwd?.deployedTelegramBotForwarder?.baseUrl ??
             "https://forwarder.whatever.team");
     _botHandleController = TextEditingController(
-        text: widget.obs?.deployedTelegramBotForwarder?.botHandle ??
+        text: widget.fwd?.deployedTelegramBotForwarder?.botHandle ??
             "smsforwarderrobot");
     _tgHandleController.addListener(_onTgHandleTextChanged);
     _baseUrlController.addListener(_onBaseUrlTextChanged);
@@ -668,13 +673,13 @@ class _DeployedTelegramBotForwarderScreen
                 controller: _botHandleController,
               ),
             ),
-            RaisedButton(
+            ElevatedButton(
                 child: Text('Save'),
                 onPressed: !_checkAllIsValid()
                     ? null
                     : () {
                         _saveSettings();
-                        Scaffold.of(context).showSnackBar(new SnackBar(
+                        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
                           content: new Text("Saved"),
                         ));
                         _openTelegramUrlInBrowser();
@@ -685,9 +690,9 @@ class _DeployedTelegramBotForwarderScreen
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showResetDialogAndUpdate(() {
           _tgHandleController.text =
-              widget.obs.deployedTelegramBotForwarder?.tgHandle ?? "";
+              widget.fwd.deployedTelegramBotForwarder?.tgHandle ?? "";
           _baseUrlController.text =
-              widget.obs.deployedTelegramBotForwarder?.baseUrl ?? "";
+              widget.fwd.deployedTelegramBotForwarder?.baseUrl ?? "";
         }),
         tooltip: "Reset Settings",
         child: Icon(Icons.clear),
@@ -696,7 +701,7 @@ class _DeployedTelegramBotForwarderScreen
   }
 
   void _openTelegramUrlInBrowser() async {
-    String url = widget.obs?.deployedTelegramBotForwarder?.getUrl();
+    String url = widget.fwd?.deployedTelegramBotForwarder?.getUrl();
     bool _canLaunch = await canLaunch(url);
     showDialog(
       context: context,
@@ -705,7 +710,7 @@ class _DeployedTelegramBotForwarderScreen
           title: Text("Open the link in the browser or copy to the clipboard:"),
           content: Text(url),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
                 child: Text("Open in Browser"),
                 onPressed: _canLaunch
                     ? () {
@@ -713,7 +718,7 @@ class _DeployedTelegramBotForwarderScreen
                         Navigator.of(context).pop();
                       }
                     : null),
-            FlatButton(
+            TextButton(
               child: Text("Copy", style: TextStyle(color: Colors.green)),
               onPressed: () {
                 Clipboard.setData(new ClipboardData(text: url));
@@ -728,19 +733,19 @@ class _DeployedTelegramBotForwarderScreen
 
   /// Updates the settings of the forwarder and dumps all forwarders to disk
   @override
-  void _saveSettings() {
-    widget?.obs?.deployedTelegramBotForwarder = DeployedTelegramBotForwarder(
+  void _saveSettings() async {
+    widget?.fwd?.deployedTelegramBotForwarder = DeployedTelegramBotForwarder(
       _tgHandleController.text,
       baseUrl: _baseUrlController.text,
       botHandle: _botHandleController.text,
     );
-    widget?.obs?.dumpToPrefs();
+    widget?.fwd?.dumpToPrefs();
   }
 
   /// Sets the value of the forwarder to null
   @override
-  void _resetSettings() {
-    widget?.obs?.deployedTelegramBotForwarder = null;
-    widget?.obs?.dumpToPrefs();
+  void _resetSettings() async {
+    widget?.fwd?.deployedTelegramBotForwarder = null;
+    widget?.fwd?.dumpToPrefs();
   }
 }
