@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sms_forwarder/update_checker.dart';
 import 'package:telephony/telephony.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'app_settings.dart';
 import 'forwarding.dart';
 import 'key_value_settings.dart';
 import 'background_forwarder.dart';
@@ -24,7 +26,7 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: new HomePage(title: 'SMS Forwarder (v1.4.0)', fwd: this.fwd),
+      home: new HomePage(title: 'SMS Forwarder ($APP_VERSION)', fwd: this.fwd),
     );
   }
 }
@@ -46,6 +48,8 @@ class _HomePageState extends State<HomePage> {
   Color _deployedBotBtnState = _yellowColor;
   Color _tgBotBtnState = _yellowColor;
   Color _callbackBtnState = _yellowColor;
+
+  bool _isUpdateAvailable;
 
   @override
   void initState() {
@@ -80,12 +84,39 @@ class _HomePageState extends State<HomePage> {
             borderRadius: BorderRadius.all(Radius.circular(1))));
   }
 
+  TextButton _getUpdateButton() {
+    IconData icon;
+    String label;
+
+    if (_isUpdateAvailable == null) {
+      icon = Icons.autorenew;
+      label = "Checking for updates...";
+      isUpdateAvailable().then((b) {
+        setState(() => _isUpdateAvailable = b);
+      });
+    } else if (_isUpdateAvailable) {
+      icon = Icons.update_sharp;
+      label = "An update is available";
+    } else {
+      icon = Icons.check;
+      label = "App is up to date";
+    }
+
+    return TextButton.icon(
+      onPressed: () async => await launch(GITHUB_URL),
+      icon: Icon(icon, color: Colors.white),
+      label: Text(
+        label,
+        style: TextStyle(fontSize: 12, color: Colors.white),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text(widget.title),
-      ),
+          title: new Text(widget.title), actions: <Widget>[_getUpdateButton()]),
       body: new Center(
         child: new Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -151,6 +182,13 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showDialog(
+            context: context,
+            builder: (_) => AppSettingsScreen(this.widget.fwd)),
+        tooltip: "App Settings",
+        child: Icon(Icons.settings),
       ),
     );
   }
