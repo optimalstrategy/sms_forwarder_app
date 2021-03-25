@@ -4,6 +4,7 @@ import 'package:sms_forwarder/update_checker.dart';
 import 'package:telephony/telephony.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'app_settings.dart';
 import 'forwarding.dart';
 import 'key_value_settings.dart';
 import 'background_forwarder.dart';
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: new HomePage(title: 'SMS Forwarder (v1.4.0)', fwd: this.fwd),
+      home: new HomePage(title: 'SMS Forwarder ($APP_VERSION)', fwd: this.fwd),
     );
   }
 }
@@ -102,12 +103,12 @@ class _HomePageState extends State<HomePage> {
     }
 
     return TextButton.icon(
-        onPressed: () async => await launch(GITHUB_URL),
-        icon: Icon(icon, color: Colors.white),
-        label: Text(
-          label,
-          style: TextStyle(fontSize: 12, color: Colors.white),
-        ),
+      onPressed: () async => await launch(GITHUB_URL),
+      icon: Icon(icon, color: Colors.white),
+      label: Text(
+        label,
+        style: TextStyle(fontSize: 12, color: Colors.white),
+      ),
     );
   }
 
@@ -181,6 +182,13 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showDialog(
+            context: context,
+            builder: (_) => AppSettingsScreen(this.widget.fwd)),
+        tooltip: "App Settings",
+        child: Icon(Icons.settings),
       ),
     );
   }

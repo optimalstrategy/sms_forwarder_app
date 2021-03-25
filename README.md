@@ -59,3 +59,12 @@ Tap accept to confirm. This will also turn off forwarding.
 <p align="center">
   <img src="screenshots/reset_settings_popup.jpg" width="288" height="608">
 </p>
+
+
+## Global Settings and Launch on Startup
+By default, the app will automatically launch on startup.
+This option can be disabled in the global app settings that can be accessed by tapping the gear icon:
+
+<p align="center">
+  <img src="screenshots/app_settings.jpg" width="288" height="608">
+</p>

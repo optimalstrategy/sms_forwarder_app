@@ -99,7 +99,7 @@ abstract class HttpForwarder implements AbstractForwarder {
       // TODO: remove debug prints
       debugPrint("Response status: ${response.statusCode}.");
       debugPrint("Response body: \'${response.body}\'.");
-      return response.statusCode == 200;
+      return response.statusCode >= 200 && response.statusCode < 400;
     });
   }
 }
@@ -231,7 +231,7 @@ class TelegramBotForwarder extends AbstractForwarder with HttpForwarder {
   /// Telegram chat id.
   int get chatId => _chatId;
 
-  /// Creates a new TelegramBotForwared instance.
+  /// Creates a new TelegramBotForwarder instance.
   TelegramBotForwarder(this._token, this._chatId);
 
   /// Creates a new TelegramBotForwarder instances from [json].
