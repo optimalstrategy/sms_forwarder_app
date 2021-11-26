@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-const String APP_VERSION = "v1.5.0";
+const String APP_VERSION = "v1.6.0";
 const String GITHUB_URL = "https://github.com/optimalstrategy/"
     "sms_forwarder_app/releases/latest";
-const String GITHUB_API_URL = "https://api.github.com/repos/"
-    + "optimalstrategy/sms_forwarder_app/releases/latest";
+const String GITHUB_API_URL = "https://api.github.com/repos/" +
+    "optimalstrategy/sms_forwarder_app/releases/latest";
 
 Future<bool> isUpdateAvailable() async {
   try {

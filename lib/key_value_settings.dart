@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// A screen with a vertical list of key-value pairs. Pairs may be removed
 /// and created dynamically. The widget uses the provided kvMap as its baking storage,
-/// modifying it in the process.
+/// modifying it according to the user's actions.
 class KeyValuePairSettingsScreen extends StatefulWidget {
   const KeyValuePairSettingsScreen(this.title, this.kvMap, {Key key})
       : super(key: key);

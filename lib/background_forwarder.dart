@@ -12,8 +12,7 @@ class BackgroundForwarder {
   BackgroundForwarder(Telephony telephony) {
     telephony.listenIncomingSms(
         onNewMessage: (msg) async => await mgr.forward(msg),
-        onBackgroundMessage: onBackgroundMessage
-    );
+        onBackgroundMessage: onBackgroundMessage);
   }
 
   static void onBackgroundMessage(SmsMessage msg) async {
