@@ -271,6 +271,7 @@ class _HttpCallbackForwarderState
   HttpMethod _method = HttpMethod.POST;
   Map<String, String> _uriParams;
   Map<String, String> _jsonParams;
+  Map<String, String> _httpHeaders;
 
   /// Input textbox controller
   TextEditingController _controller;
@@ -293,6 +294,7 @@ class _HttpCallbackForwarderState
     _method = fwd?.method ?? HttpMethod.POST;
     _uriParams = Map.from(fwd?.uriPayload ?? {});
     _jsonParams = Map.from(fwd?.jsonPayload ?? {});
+    _httpHeaders = Map.from(fwd?.httpHeaders ?? {});
     _controller.addListener(_onTextChanged);
     setState(_onTextChanged);
   }
@@ -373,7 +375,14 @@ class _HttpCallbackForwarderState
                   onPressed: () => showDialog(
                       context: context,
                       builder: (_) => KeyValuePairSettingsScreen(
-                          "JSON Payload", _jsonParams)))
+                          "JSON Payload", _jsonParams))),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 5)),
+              ElevatedButton(
+                  child: Text('Headers'),
+                  onPressed: () => showDialog(
+                      context: context,
+                      builder: (_) => KeyValuePairSettingsScreen(
+                          "HTTP Headers", _httpHeaders)))
             ]),
             Padding(padding: EdgeInsets.symmetric(vertical: 2)),
             ElevatedButton(
@@ -404,7 +413,10 @@ class _HttpCallbackForwarderState
   @override
   void _saveSettings() async {
     widget?.fwd?.httpCallbackForwarder = HttpCallbackForwarder(_controller.text,
-        method: _method, uriPayload: _uriParams, jsonPayload: _jsonParams);
+        method: _method,
+        uriPayload: _uriParams,
+        jsonPayload: _jsonParams,
+        httpHeaders: _httpHeaders);
     widget?.fwd?.dumpToPrefs();
   }
 
@@ -413,6 +425,7 @@ class _HttpCallbackForwarderState
   void _resetSettings() async {
     _uriParams.clear();
     _jsonParams.clear();
+    _httpHeaders.clear();
     widget?.fwd?.httpCallbackForwarder = null;
     widget?.fwd?.dumpToPrefs();
   }

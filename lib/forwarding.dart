@@ -137,13 +137,16 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
   /// The optional JSON payload (only used when performing PUT and POST requests).
   Map<String, String> jsonPayload = {};
 
+  /// The HTTP headers to include in the request
+  Map<String, String> httpHeaders = {};
+
   /// Returns the url of the callback.
   String get callbackUrl => _callbackUrl;
 
   /// Initializes the forwarder.
   /// The caller is responsible to make sure that the protocol is valid.
   HttpCallbackForwarder(this._callbackUrl,
-      {this.method, this.uriPayload, this.jsonPayload});
+      {this.method, this.uriPayload, this.jsonPayload, this.httpHeaders});
 
   /// Creates a new HttpCallbackForwarder from the given [json] object.
   @override
@@ -173,6 +176,7 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
 
     uriPayload = Map.from(json["uriPayload"] ?? {});
     jsonPayload = Map.from(json["jsonPayload"] ?? {});
+    httpHeaders = Map.from(json["httpHeaders"] ?? {});
   }
 
   /// Dumps the forwarder's configuration to json
@@ -182,7 +186,8 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
       "callbackUrl": _callbackUrl,
       "method": method.name,
       "uriPayload": uriPayload,
-      "jsonPayload": jsonPayload
+      "jsonPayload": jsonPayload,
+      "httpHeaders": httpHeaders,
     });
     return '{"HttpCallbackForwarder": $fields}';
   }
@@ -199,7 +204,7 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
         smsData.addAll(uriPayload);
         // Then URI encode the map and perform the request
         final uriParams = HttpForwarder.mapToUri(smsData);
-        return http.get("$_callbackUrl$uriParams");
+        return http.get("$_callbackUrl$uriParams", headers: httpHeaders);
 
       case HttpMethod.POST:
       case HttpMethod.PUT:
@@ -211,8 +216,10 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
         final url = "$_callbackUrl$uriParams";
         // Perform the request using the required method
         return method == HttpMethod.POST
-            ? http.post(url, body: HttpForwarder.mapToJson(payload))
-            : http.put(url, body: HttpForwarder.mapToJson(payload));
+            ? http.post(url,
+                body: HttpForwarder.mapToJson(payload), headers: httpHeaders)
+            : http.put(url,
+                body: HttpForwarder.mapToJson(payload), headers: httpHeaders);
     }
   }
 }

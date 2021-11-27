@@ -2,7 +2,7 @@
 This app can forward SMS messages to a Telegram bot or an HTTP endpoint.
 
 # Installation
-1. Simply download and install `sms_forwarder.apk` from the lateset [release](https://github.com/OptimalStrategy/sms_forwarder_app/releases).
+1. Simply download and install `sms_forwarder.apk` from the latest [release](https://github.com/OptimalStrategy/sms_forwarder_app/releases).
 
 ## Development and Building
 1. Install [flutter](https://flutter.io/docs/get-started/install)
