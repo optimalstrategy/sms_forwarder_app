@@ -16,10 +16,6 @@ class BackgroundForwarder {
   }
 
   static void onBackgroundMessage(SmsMessage msg) async {
-    if (_backgroundManager == null) {
-      _backgroundManager = new ForwarderManager();
-      await _backgroundManager.loadFromPrefs();
-    }
     await _backgroundManager.forward(msg);
   }
 

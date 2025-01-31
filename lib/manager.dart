@@ -26,7 +26,7 @@ class ForwarderManager {
 
   Future<bool> tryForward(AbstractForwarder fwd, SmsMessage sms) async {
     try {
-      return await fwd?.forward(sms);
+      return await fwd.forward(sms);
     } catch (ex) {
       debugPrint("Failed to forward the message with " +
           fwd.runtimeType.toString() +
@@ -72,7 +72,6 @@ class ForwarderManager {
   String dumpToJson() {
     List<String> serialized = [];
     for (var fwd in asList()) {
-      if (fwd == null) continue;
       String json = fwd.toJson();
       // Remove the trailing '{' and '}'
       serialized.add(json.substring(1, json.length - 1));

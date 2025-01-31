@@ -162,7 +162,7 @@ class _KeyValuePairWidgetState extends State<_KeyValuePairWidget> {
     if (newKey.isEmpty) {
       kvMap.remove(key);
       // Make the border red if the key is missing but the value is present
-      if (value != null) color = Colors.red;
+      color = Colors.red;
       // If the key is non-empty and isn't already in the map, update the map
       // and remove the old entry.
     } else if (newKey.isNotEmpty && !kvMap.containsKey(newKey)) {

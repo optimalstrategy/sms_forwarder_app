@@ -155,7 +155,6 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
       json = json["HttpCallbackForwarder"];
     }
     _callbackUrl = json["callbackUrl"];
-    if (_callbackUrl == null) throw ArgumentError("Missing the callback url.");
 
     var jsonMethod = json["method"] ?? "";
     switch (jsonMethod) {
@@ -249,8 +248,6 @@ class TelegramBotForwarder extends AbstractForwarder with HttpForwarder {
     }
     _token = json["token"];
     _chatId = json["chatId"];
-    if (_token == null || _chatId == null)
-      throw ArgumentError("Missing the token or chat id");
   }
 
   /// Constructs the base Telegram Bot API url.
@@ -304,8 +301,8 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
 
   /// Default constructor
   DeployedTelegramBotForwarder(this._tgHandle,
-      {baseUrl: "https://forwarder.whatever.team",
-      botHandle: "smsforwarderrobot"})
+      {baseUrl = "https://forwarder.whatever.team",
+      botHandle = "smsforwarderrobot"})
       : super("$baseUrl/forward") {
     _baseUrl = baseUrl;
     _botHandle = botHandle;
@@ -322,7 +319,6 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
     _tgHandle = json['tgHandle'];
     _tgCode = json['tgCode'] ?? _genCode();
     super._callbackUrl = '$_baseUrl/forward';
-    if (_tgHandle == null) throw ArgumentError("Missing the telegram handle");
   }
 
   /// Returns a url that updates (or creates) the confirmation code.

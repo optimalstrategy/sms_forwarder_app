@@ -88,19 +88,13 @@ class _HomePageState extends State<HomePage> {
     IconData icon;
     String label;
 
-    if (_isUpdateAvailable == null) {
-      icon = Icons.autorenew;
-      label = "Checking for updates...";
-      isUpdateAvailable().then((b) {
-        setState(() => _isUpdateAvailable = b);
-      });
-    } else if (_isUpdateAvailable) {
-      icon = Icons.update_sharp;
-      label = "An update is available";
-    } else {
-      icon = Icons.check;
-      label = "App is up to date";
-    }
+    if (_isUpdateAvailable) {
+    icon = Icons.update_sharp;
+    label = "An update is available";
+  } else {
+    icon = Icons.check;
+    label = "App is up to date";
+  }
 
     return TextButton.icon(
       onPressed: () async => await launch(GITHUB_URL),
