@@ -10,8 +10,9 @@ const String GITHUB_API_URL = "https://api.github.com/repos/" +
     "optimalstrategy/sms_forwarder_app/releases/latest";
 
 Future<bool> isUpdateAvailable() async {
+  var githubApiUrl = Uri.parse(GITHUB_API_URL);
   try {
-    var r = await http.get(GITHUB_API_URL);
+    var r = await http.get(githubApiUrl);
     if (r.statusCode != 200) return false;
     var json = jsonDecode(r.body);
     return json["tag_name"] != APP_VERSION;

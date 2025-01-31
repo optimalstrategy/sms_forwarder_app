@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 /// and created dynamically. The widget uses the provided kvMap as its baking storage,
 /// modifying it according to the user's actions.
 class KeyValuePairSettingsScreen extends StatefulWidget {
-  const KeyValuePairSettingsScreen(this.title, this.kvMap, {Key key})
+  const KeyValuePairSettingsScreen(this.title, this.kvMap, {Key? key})
       : super(key: key);
 
   /// The screen title.
@@ -42,7 +42,7 @@ class _KeyValuePairScreenState extends State<KeyValuePairSettingsScreen> {
   }
 
   /// Adds a new widget and a padding to the list of key-value pairs.
-  void addKvWidget({String key}) {
+  void addKvWidget({String? key}) {
     // Note that the key, UniqueKey(), is required to ensure that the widgets
     // are updated correctly,
     pairs.add(new _KeyValuePairWidget(this, kvMap,
@@ -81,7 +81,7 @@ class _KeyValuePairScreenState extends State<KeyValuePairSettingsScreen> {
 /// A widget that holds a single key value pair.
 class _KeyValuePairWidget extends StatefulWidget {
   const _KeyValuePairWidget(this._parentState, this.kvMap,
-      {Key key, this.initialKey})
+      {required Key key, this.initialKey})
       : super(key: key);
 
   /// The state of the parent settings screen widget.
@@ -91,7 +91,7 @@ class _KeyValuePairWidget extends StatefulWidget {
   final Map kvMap;
 
   /// The initial key value.
-  final String initialKey;
+  final String? initialKey;
 
   @override
   State<StatefulWidget> createState() =>
@@ -111,16 +111,16 @@ class _KeyValuePairWidgetState extends State<_KeyValuePairWidget> {
   String key = "";
 
   /// The currently displayed value / previous `value` value.
-  String value;
+  String? value;
 
   /// Whether to allow editing the value.
   bool _valueEnabled = true;
 
   // UI controllers, borders, and decorations.
-  TextEditingController _keyController;
-  TextEditingController _valueController;
-  InputBorder _keyBorder;
-  InputBorder _valueBorder;
+  late TextEditingController _keyController;
+  late TextEditingController _valueController;
+  late InputBorder _keyBorder;
+  late InputBorder _valueBorder;
 
   InputDecoration get _keyInputDecoration => InputDecoration(
         border: _keyBorder,
@@ -162,7 +162,9 @@ class _KeyValuePairWidgetState extends State<_KeyValuePairWidget> {
     if (newKey.isEmpty) {
       kvMap.remove(key);
       // Make the border red if the key is missing but the value is present
-      color = Colors.red;
+      if (value != null) {
+        color = Colors.red;
+      }
       // If the key is non-empty and isn't already in the map, update the map
       // and remove the old entry.
     } else if (newKey.isNotEmpty && !kvMap.containsKey(newKey)) {
@@ -172,7 +174,7 @@ class _KeyValuePairWidgetState extends State<_KeyValuePairWidget> {
 
       // Otherwise, the key must either be already used by another entry
       // or be identical to the current key. We want to reject the former.
-    } else if (newKey != this.key) {
+    } else if (newKey != this.key && this.key != "") {
       // The previous entry still needs to be cleared
       value = kvMap.remove(this.key);
       enabled = false;
@@ -190,6 +192,15 @@ class _KeyValuePairWidgetState extends State<_KeyValuePairWidget> {
     if (key.isNotEmpty) kvMap[key] = value;
 
     setState(() {
+      if (value == null || value == "") {
+        _valueBorder =
+            OutlineInputBorder(borderSide: BorderSide(color: Colors.red));
+        return;
+      }
+
+      _keyBorder = OutlineInputBorder(
+          borderSide:
+              BorderSide(color: key.isNotEmpty ? Colors.green : Colors.red));
       _valueBorder =
           OutlineInputBorder(borderSide: BorderSide(color: Colors.green));
     });

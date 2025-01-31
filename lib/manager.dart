@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:telephony/telephony.dart';
+import 'package:another_telephony/telephony.dart';
 import 'forwarding.dart';
 
 import 'dart:core';
@@ -9,12 +9,12 @@ import 'package:flutter/foundation.dart';
 
 class ForwarderManager {
   // Supported forwarders
-  HttpCallbackForwarder httpCallbackForwarder;
-  TelegramBotForwarder telegramBotForwarder;
-  DeployedTelegramBotForwarder deployedTelegramBotForwarder;
+  HttpCallbackForwarder? httpCallbackForwarder;
+  TelegramBotForwarder? telegramBotForwarder;
+  DeployedTelegramBotForwarder? deployedTelegramBotForwarder;
 
   /// Returns the mapping (forwarder name -> forwarding result)
-  Future<Map<String, bool>> forward(SmsMessage sms) async {
+  Future<Map<String, bool?>> forward(SmsMessage sms) async {
     Map<String, bool> map = {};
     map["HttpCallbackForwarder"] = await tryForward(httpCallbackForwarder, sms);
     map["TelegramBotForwarder"] = await tryForward(telegramBotForwarder, sms);
@@ -24,9 +24,9 @@ class ForwarderManager {
     return map;
   }
 
-  Future<bool> tryForward(AbstractForwarder fwd, SmsMessage sms) async {
+  Future<bool> tryForward(AbstractForwarder? fwd, SmsMessage sms) async {
     try {
-      return await fwd.forward(sms);
+      return await fwd?.forward(sms) ?? false;
     } catch (ex) {
       debugPrint("Failed to forward the message with " +
           fwd.runtimeType.toString() +
@@ -37,14 +37,14 @@ class ForwarderManager {
   }
 
   /// Returns the mapping (forwarder name -> forwarder object)
-  Map<String, AbstractForwarder> asMap() => {
+  Map<String, AbstractForwarder?> asMap() => {
         "HttpCallbackForwarder": httpCallbackForwarder,
         "TelegramBotForwarder": telegramBotForwarder,
         "DeployedTelegramBotForwarder": deployedTelegramBotForwarder,
       };
 
   /// Returns a list of forwarder objects.
-  List<AbstractForwarder> asList() => asMap().values.toList();
+  List<AbstractForwarder?> asList() => asMap().values.toList();
 
   /// Returns the mapping (forwarder name -> not null)
   Map<String, bool> reportReadiness() =>
@@ -72,6 +72,7 @@ class ForwarderManager {
   String dumpToJson() {
     List<String> serialized = [];
     for (var fwd in asList()) {
+      if (fwd == null) continue;
       String json = fwd.toJson();
       // Remove the trailing '{' and '}'
       serialized.add(json.substring(1, json.length - 1));
@@ -80,12 +81,12 @@ class ForwarderManager {
   }
 
   /// Attempts to load a forwarder of type [T] using the provided closure [fromJson].
-  T _tryLoad<T extends AbstractForwarder>(Function fromJson) {
-    var instance;
+  T? _tryLoad<T extends AbstractForwarder>(Function fromJson) {
+    var instance = null;
     try {
       instance = fromJson();
     } catch (ArgumentError) {}
-    return instance as T;
+    return instance;
   }
 
   /// Dumps the forwarders to shared preferences.

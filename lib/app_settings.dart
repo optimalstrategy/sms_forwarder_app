@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sms_forwarder/background_forwarder.dart';
-import 'package:telephony/telephony.dart';
+import 'package:another_telephony/telephony.dart';
 
 class SettingStrings {
   static final String launchOnStartup = "launch_on_startup";
@@ -9,7 +9,7 @@ class SettingStrings {
 
 /// A screen with the App's settings.
 class AppSettingsScreen extends StatefulWidget {
-  const AppSettingsScreen(this.fwd, {Key key}) : super(key: key);
+  const AppSettingsScreen(this.fwd, {Key? key}) : super(key: key);
 
   final BackgroundForwarder fwd;
 
@@ -22,11 +22,11 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
 
   final BackgroundForwarder fwd;
 
-  OutlineInputBorder _testMessageBorder;
-  TextEditingController _testMessageController;
+  OutlineInputBorder? _testMessageBorder;
+  late TextEditingController _testMessageController;
 
   bool _launchOnStartup = true;
-  Map<String, bool> _forwardingResults;
+  late Map<String, bool?> _forwardingResults;
 
   @override
   void initState() {
@@ -136,7 +136,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                   } else if (result) {
                     color = Colors.green;
                   } else {
-                    color = Colors.red[200];
+                    color = Colors.red.shade200;
                   }
                   return Container(
                     height: 50,

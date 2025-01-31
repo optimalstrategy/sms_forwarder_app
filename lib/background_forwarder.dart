@@ -1,4 +1,4 @@
-import 'package:telephony/telephony.dart';
+import 'package:another_telephony/telephony.dart';
 
 import 'forwarding.dart';
 import 'manager.dart';
@@ -6,7 +6,7 @@ import 'manager.dart';
 /// A wrapper for [ForwarderManager] that registers a background message handler.
 /// Resets the background forwarder every time a field is updated.
 class BackgroundForwarder {
-  static ForwarderManager _backgroundManager;
+  static ForwarderManager? _backgroundManager;
   final ForwarderManager mgr = new ForwarderManager();
 
   BackgroundForwarder(Telephony telephony) {
@@ -15,28 +15,33 @@ class BackgroundForwarder {
         onBackgroundMessage: onBackgroundMessage);
   }
 
+  @pragma('vm:entry-point')
   static void onBackgroundMessage(SmsMessage msg) async {
-    await _backgroundManager.forward(msg);
+    if (_backgroundManager == null) {
+      _backgroundManager = new ForwarderManager();
+      await _backgroundManager?.loadFromPrefs();
+    }
+    await _backgroundManager?.forward(msg);
   }
 
-  HttpCallbackForwarder get httpCallbackForwarder => mgr.httpCallbackForwarder;
+  HttpCallbackForwarder? get httpCallbackForwarder => mgr.httpCallbackForwarder;
 
-  TelegramBotForwarder get telegramBotForwarder => mgr.telegramBotForwarder;
+  TelegramBotForwarder? get telegramBotForwarder => mgr.telegramBotForwarder;
 
-  DeployedTelegramBotForwarder get deployedTelegramBotForwarder =>
+  DeployedTelegramBotForwarder? get deployedTelegramBotForwarder =>
       mgr.deployedTelegramBotForwarder;
 
-  set httpCallbackForwarder(HttpCallbackForwarder fwd) {
+  set httpCallbackForwarder(HttpCallbackForwarder? fwd) {
     mgr.httpCallbackForwarder = fwd;
     invalidateBackgroundManager();
   }
 
-  set telegramBotForwarder(TelegramBotForwarder fwd) {
+  set telegramBotForwarder(TelegramBotForwarder? fwd) {
     mgr.telegramBotForwarder = fwd;
     invalidateBackgroundManager();
   }
 
-  set deployedTelegramBotForwarder(DeployedTelegramBotForwarder fwd) {
+  set deployedTelegramBotForwarder(DeployedTelegramBotForwarder? fwd) {
     mgr.deployedTelegramBotForwarder = fwd;
     invalidateBackgroundManager();
   }
