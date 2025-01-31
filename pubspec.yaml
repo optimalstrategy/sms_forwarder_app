@@ -1,6 +1,6 @@
 name: sms_forwarder
 description: An SMS forwarding application.
-version: 1.6.0
+version: 1.7.0
 
 environment:
   sdk: ">=3.2.0 <4.0.0"
