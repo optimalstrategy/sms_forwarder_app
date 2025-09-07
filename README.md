@@ -46,7 +46,14 @@ You may additionally specify the desired HTTP method, URI parameters, and a JSON
 The JSON payload supports interpolation using `{{name}}` formatters. If the value of a field correctly parses as json, it will be included in the body as such.
 Example:
 ```
-{ "content": "{{address}} says '{{body}}'"
+Key:
+content
+
+Value:
+{ text: "{{address}} says '{{body}}'" }
+
+Resulting body:
+{ "content": { "text": "1234 says 'Hello'" }, ... }
 ```
 
 Available formatters:
