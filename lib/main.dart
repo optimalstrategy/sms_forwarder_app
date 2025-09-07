@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sms_forwarder/update_checker.dart';
 import 'package:another_telephony/telephony.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,6 +11,8 @@ import 'app_settings.dart';
 import 'forwarding.dart';
 import 'key_value_settings.dart';
 import 'background_forwarder.dart';
+
+final NAVIGATOR_KEY = GlobalKey<NavigatorState>();
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,9 +29,11 @@ class MyApp extends StatelessWidget {
     return new MaterialApp(
       title: 'SMS Forwarder',
       theme: new ThemeData(
-        primarySwatch: Colors.green,
+        useMaterial3: true,
+        colorSchemeSeed: Colors.white54,
       ),
       home: new HomePage(title: 'SMS Forwarder ($APP_VERSION)', fwd: this.fwd),
+      navigatorKey: NAVIGATOR_KEY,
     );
   }
 }
@@ -42,7 +49,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => new _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   static final Color _greenColor = Colors.green.shade500;
   static final Color _yellowColor = Colors.yellow.shade500;
 
@@ -51,13 +58,22 @@ class _HomePageState extends State<HomePage> {
   Color _callbackBtnState = _yellowColor;
 
   bool? _isUpdateAvailable;
+  PermissionStatus? _permissionStatus;
+  bool _showingPermissionDialog = false;
+  Future<Null>? _isChecking = null;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkPermissionStatus();
+    _loadForwarders(); // Load the saved forwarding settings
+  }
 
-    // Load the saved forwarding settings
-    _loadForwarders();
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   /// Loads forwarders' settings and updates the buttons.
@@ -118,7 +134,9 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-          title: new Text(widget.title), actions: <Widget>[_getUpdateButton()]),
+          backgroundColor: Colors.green,
+          title: new Text(widget.title, style: TextStyle(fontSize: 16)),
+          actions: <Widget>[_getUpdateButton()]),
       body: new Center(
         child: new Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -193,6 +211,102 @@ class _HomePageState extends State<HomePage> {
         child: Icon(Icons.settings),
       ),
     );
+  }
+
+  Future<void> _checkPermissionStatus() async {
+    if (_isChecking != null) {
+      await _isChecking;
+      _isChecking = null;
+      return await _checkPermissionStatus();
+    }
+
+    final completer = new Completer<Null>();
+    _isChecking = completer.future;
+
+    try {
+      final status = await Permission.sms.status;
+      final isPermanentlyDenied = await Permission.sms.isPermanentlyDenied;
+      final isRestricted = await Permission.sms.isRestricted;
+      _updateStatus(status);
+
+      if (status != PermissionStatus.granted) {
+        if (isPermanentlyDenied || isRestricted) {
+          _showPermissionDialog();
+        } else {
+          await Permission.sms.request().then((statusResponse) async {
+            if (statusResponse != PermissionStatus.granted) {
+              openAppSettings();
+            } else {
+              _updateStatus(status);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Caught an error while checking permissions ${e}");
+    } finally {
+      completer.complete();
+      _isChecking = null;
+    }
+  }
+
+  void _updateStatus(PermissionStatus status) {
+    if (status != _permissionStatus) {
+      setState(() {
+        _permissionStatus = status;
+      });
+    }
+
+    if (status == PermissionStatus.granted &&
+        NAVIGATOR_KEY.currentContext != null) {
+      if (NAVIGATOR_KEY.currentWidget is AlertDialog) {
+        Navigator.of(NAVIGATOR_KEY.currentContext!).maybePop();
+      }
+    }
+  }
+
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissionStatus();
+    }
+  }
+
+  Future<void> _showPermissionDialog() async {
+    if (NAVIGATOR_KEY.currentContext == null || _showingPermissionDialog) {
+      return;
+    }
+    _showingPermissionDialog = true;
+
+    try {
+      await showDialog(
+          context: NAVIGATOR_KEY.currentContext!,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('SMS Permissions Denied'),
+              content: const Text(
+                'This app requires access to SMS messages in order to forward them. '
+                'Please grant the permission the Android settings.\n\n'
+                'On more recent versions of Android, you may need to '
+                '"Allow restricted permissions" in the top-right corner '
+                'of the app settings before granting the SMS permission.',
+              ),
+              actions: <Widget>[
+                TextButton(
+                  style: TextButton.styleFrom(
+                    textStyle: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  child: const Text('Open Settings'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    openAppSettings();
+                  },
+                ),
+              ],
+            );
+          });
+    } finally {
+      _showingPermissionDialog = false;
+    }
   }
 }
 

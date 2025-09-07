@@ -22,5 +22,7 @@ Future<bool> isUpdateAvailable() async {
     return false;
   } on StateError {
     return false;
+  } on http.ClientException {
+    return false;
   }
 }

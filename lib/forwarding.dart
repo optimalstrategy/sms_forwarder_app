@@ -76,16 +76,17 @@ abstract mixin class HttpForwarder implements AbstractForwarder {
 
   /// Casts all keys and values in the map to String and serializes
   /// the resulting map as JSON.
-  static String mapToJson(Map map) => json.encode(_castMap(map));
+  static String mapToJson(Map map) =>
+      json.encode(_castMap(map, castValues: false));
 
   /// Casts all keys and values in the map to String. Removes the entry with
   /// the key threadId.
-  static Map<String, String> _castMap(Map map) {
+  static Map<String, dynamic> _castMap(Map map, {bool castValues = true}) {
     map.remove('threadId');
     map.remove("subscriptionId");
     return Map.from(map.map(
         // Cast each field to string
-        (k, v) => MapEntry(k.toString(), v.toString())));
+        (k, v) => MapEntry(k.toString(), castValues ? v.toString() : v)));
   }
 
   /// Should make an http request and return the request object.
@@ -216,9 +217,10 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
       case HttpMethod.PUT:
         // Convert the sms to json and merge it with the json payload
         final payload = sms.toMap;
-        payload.addAll(jsonPayload);
+        payload.addAll(_interpolateSmsFormatters(sms, jsonPayload));
         // URI encode the uri payload and append it to the url
-        final uriParams = HttpForwarder.mapToUri(uriPayload);
+        final uriParams =
+            HttpForwarder.mapToUri(_interpolateSmsFormatters(sms, uriPayload));
         final url = Uri.parse("$_callbackUrl$uriParams");
         // Perform the request using the required method
         if (!httpHeaders.containsKey("content-type") &&
@@ -231,6 +233,35 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
             : http.put(url,
                 body: HttpForwarder.mapToJson(payload), headers: httpHeaders);
     }
+  }
+
+  Map<String, dynamic> _interpolateSmsFormatters(
+      SmsMessage sms, Map<String, String> payload) {
+    final dest = new Map<String, dynamic>();
+    final smsMap = sms.toMap;
+
+    String processString(String input) {
+      final regex = RegExp(r'\{\{(.*?)\}\}');
+      return input.replaceAllMapped(regex, (match) {
+        final formatterKey = match.group(1);
+        if (formatterKey != null && smsMap.containsKey(formatterKey)) {
+          return smsMap[formatterKey]?.toString() ?? match.group(0)!;
+        }
+        return match.group(0)!; // Leave untouched if not found or key is null
+      });
+    }
+
+    payload.forEach((key, value) {
+      final newKey = processString(key);
+      final newValue = processString(value);
+      try {
+        dest[newKey] = jsonDecode(newValue);
+      } catch (e) {
+        dest[newKey] = newValue;
+      }
+    });
+
+    return dest;
   }
 }
 
@@ -290,7 +321,6 @@ class TelegramBotForwarder extends AbstractForwarder with HttpForwarder {
           "Date: $date."
     });
     final baseUrl = this.method("sendMessage");
-    debugPrint('chat=$_chatId url=$baseUrl$uriParams');
     final url = Uri.parse("$baseUrl$uriParams");
     return http.post(url);
   }
@@ -379,7 +409,7 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
   String _genCode() {
     final rand = Random();
     return String.fromCharCodes(
-        new List.generate(8, (_) => rand.nextInt(26) + 65));
+        new List.generate(32, (_) => rand.nextInt(26) + 65));
   }
 
   /// Dumps the forwarder's settings to json.

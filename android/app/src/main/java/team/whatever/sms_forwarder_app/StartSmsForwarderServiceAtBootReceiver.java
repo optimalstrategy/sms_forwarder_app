@@ -18,7 +18,6 @@ class StartSmsForwarderServiceAtBootReceiver extends BroadcastReceiver {
         Handler h = new Handler();
 
         String action = intent.getAction();
-        Log.i("forwarder", "onReceive action " + action);
         if (action == null || !action.equals(Intent.ACTION_BOOT_COMPLETED)) {
             return;
         }

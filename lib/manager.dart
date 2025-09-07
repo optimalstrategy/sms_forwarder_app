@@ -20,7 +20,6 @@ class ForwarderManager {
     map["TelegramBotForwarder"] = await tryForward(telegramBotForwarder, sms);
     map["DeployedTelegramBotForwarder"] =
         await tryForward(deployedTelegramBotForwarder, sms);
-    debugPrint(map.toString());
     return map;
   }
 

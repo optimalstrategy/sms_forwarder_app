@@ -77,9 +77,11 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
       SmsColumn.BODY,
       SmsColumn.DATE,
     ]));
-    setState(() {
-      _forwardingResults = results;
-    });
+    if (mounted) {
+      setState(() {
+        _forwardingResults = results;
+      });
+    }
   }
 
   @override
