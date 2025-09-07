@@ -43,6 +43,28 @@ You can read how to get these [here](https://core.telegram.org/bots).
 ## Option #3 - HTTP Callback
 The app can forward messages to your http endpoint -- simply provide the callback address and press save. 
 You may additionally specify the desired HTTP method, URI parameters, and a JSON payload.
+The JSON payload supports interpolation using `{{name}}` formatters. If the value of a field correctly parses as json, it will be included in the body as such.
+Example:
+```
+{ "content": "{{address}} says '{{body}}'"
+```
+
+Available formatters:
+
+| Field                 | Description                                            |
+|-----------------------|--------------------------------------------------------|
+| `id`                  | Internal integer ID of the message                     |
+| `address`             | Address/phone number of the sender                     |
+| `body`                | The content of the message                             |
+| `date`                | Local time of your device when the SMS was received    |
+| `dateSent`            | Local time of the sender's device when the SMS was sent |
+| `read`                | Whether the sms has been read                          |
+| `seen`                | Whether the sms has been seen but not read             |
+| `subject`             | The subject of the message, if present                 |
+| `type`                | The type of the message                                |
+| `status`              | The status of the message                              |
+
+
 
 <p align="center">
   <img src="screenshots/http_callback.jpg" width="288" height="608">
