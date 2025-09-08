@@ -11,6 +11,7 @@ import 'app_settings.dart';
 import 'forwarding.dart';
 import 'key_value_settings.dart';
 import 'background_forwarder.dart';
+import 'responsive.dart';
 
 final NAVIGATOR_KEY = GlobalKey<NavigatorState>();
 
@@ -137,14 +138,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           backgroundColor: Colors.green,
           title: new Text(widget.title, style: TextStyle(fontSize: 16)),
           actions: <Widget>[_getUpdateButton()]),
-      body: new Center(
+      body: ResponsiveScaffoldBody(
+        centerVertically: true,
         child: new Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             // Deployed bot forwarder button
-            new ButtonTheme(
-              minWidth: 320,
-              height: 50,
+            SizedBox(
+              width: double.infinity,
               child: new TextButton(
                 onPressed: () => Navigator.push(
                     context,
@@ -160,11 +161,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            new Padding(padding: EdgeInsets.symmetric(vertical: 5)),
+            SizedBox(height: 8),
             // Telegram bot forwarder button
-            new ButtonTheme(
-              minWidth: 320,
-              height: 50,
+            SizedBox(
+              width: double.infinity,
               child: new TextButton(
                 onPressed: () => Navigator.push(
                     context,
@@ -180,11 +180,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            new Padding(padding: EdgeInsets.symmetric(vertical: 5)),
+            SizedBox(height: 8),
             // Http callback forwarder button
-            new ButtonTheme(
-              minWidth: 320,
-              height: 50,
+            SizedBox(
+              width: double.infinity,
               child: new TextButton(
                 onPressed: () => Navigator.push(
                     context,
@@ -344,6 +343,16 @@ abstract class _ForwarderScreenState<T extends AbstractForwarder>
     return re.hasMatch(s);
   }
 
+  /// Common style for auxiliary action buttons across forwarder screens.
+  ButtonStyle get _auxButtonStyle => ElevatedButton.styleFrom(
+        backgroundColor: Colors.grey.shade300,
+        foregroundColor: Colors.blueGrey.shade800,
+        elevation: 7,
+        shadowColor: Colors.black54,
+        shape: StadiumBorder(),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      );
+
   /// Shows the reset dialog.
   Future _showResetDialog() {
     return showDialog(
@@ -402,6 +411,8 @@ class _HttpCallbackForwarderState
       hintText: "https://cb.example.com/endpoint",
       hintStyle: TextStyle(fontSize: 16));
 
+  
+
   @override
   void initState() {
     super.initState();
@@ -432,88 +443,119 @@ class _HttpCallbackForwarderState
       appBar: AppBar(
         title: Text('Http Callback Settings'),
       ),
-      body: Builder(builder: (BuildContext context) {
-        return Center(
-            child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: ResponsiveScaffoldBody(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Text("Specify HTTP callback url and request method"),
-            Padding(padding: EdgeInsets.symmetric(vertical: 5)),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-              Container(
-                  width: 100,
-                  margin: EdgeInsets.only(right: 5),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4.0),
-                    border: Border.all(
-                        color: Colors.green,
-                        style: BorderStyle.solid,
-                        width: 1),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                      child: DropdownButton(
-                    iconSize: 0.0,
-                    isExpanded: true,
-                    value: _method,
-                    style: TextStyle(fontSize: 20, color: Colors.green),
-                    items: <HttpMethod>[
-                      HttpMethod.POST,
-                      HttpMethod.GET,
-                      HttpMethod.PUT
-                    ].map((HttpMethod value) {
-                      return DropdownMenuItem(
-                        value: value,
-                        child: Center(
-                            child: Text(value.name, textAlign: TextAlign.end)),
-                      );
-                    }).toList(),
-                    onChanged: (method) => setState(() => _method = method!),
-                  ))),
-              Padding(padding: EdgeInsets.symmetric(vertical: 5)),
-              Container(
-                  width: 200,
+            SizedBox(height: 8),
+            Row(children: <Widget>[
+              SizedBox(
+                  width: 140,
+                  child: Container(
+                      margin: EdgeInsets.only(right: 8),
+                      height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4.0),
+                        border: Border.all(
+                            color: Colors.green,
+                            style: BorderStyle.solid,
+                            width: 1),
+                      ),
+                      child: PopupMenuButton<HttpMethod>(
+                        position: PopupMenuPosition.under,
+                        constraints:
+                            BoxConstraints(minWidth: 140, maxWidth: 140),
+                        onSelected: (method) =>
+                            setState(() => _method = method),
+                        itemBuilder: (context) => <PopupMenuEntry<HttpMethod>>[
+                          PopupMenuItem<HttpMethod>(
+                            value: HttpMethod.POST,
+                            child: Center(
+                                child: Text('POST',
+                                    style: TextStyle(
+                                        fontSize: 20, color: Colors.green))),
+                          ),
+                          PopupMenuItem<HttpMethod>(
+                            value: HttpMethod.GET,
+                            child: Center(
+                                child: Text('GET',
+                                    style: TextStyle(
+                                        fontSize: 20, color: Colors.green))),
+                          ),
+                          PopupMenuItem<HttpMethod>(
+                            value: HttpMethod.PUT,
+                            child: Center(
+                                child: Text('PUT',
+                                    style: TextStyle(
+                                        fontSize: 20, color: Colors.green))),
+                          ),
+                        ],
+                        child: SizedBox(
+                          height: 56,
+                          child: Center(
+                            child: Text(
+                              _method.name,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 20, color: Colors.green),
+                            ),
+                          ),
+                        ),
+                      ))),
+              Expanded(
                   child: TextField(
-                    decoration: _inputDecoration,
-                    controller: _controller,
-                  ))
+                decoration: _inputDecoration,
+                controller: _controller,
+              ))
             ]),
-            Padding(padding: EdgeInsets.symmetric(vertical: 5)),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-              ElevatedButton(
-                  child: Text('URI Params'),
-                  onPressed: () => showDialog(
-                      context: context,
-                      builder: (_) => KeyValuePairSettingsScreen(
-                          "URI Params", _uriParams))),
-              Padding(padding: EdgeInsets.symmetric(horizontal: 5)),
-              ElevatedButton(
-                  child: Text('JSON Payload'),
-                  onPressed: () => showDialog(
-                      context: context,
-                      builder: (_) => KeyValuePairSettingsScreen(
-                          "JSON Payload", _jsonParams))),
-              Padding(padding: EdgeInsets.symmetric(horizontal: 5)),
-              ElevatedButton(
-                  child: Text('Headers'),
-                  onPressed: () => showDialog(
-                      context: context,
-                      builder: (_) => KeyValuePairSettingsScreen(
-                          "HTTP Headers", _httpHeaders)))
-            ]),
-            Padding(padding: EdgeInsets.symmetric(vertical: 2)),
-            ElevatedButton(
-                child: Text('Save'),
-                onPressed: !_checkValidUrl(_controller.text)
-                    ? null
-                    : () {
-                        _saveSettings();
-                        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
-                          content: new Text("Saved"),
-                        ));
-                      }),
+            SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: <Widget>[
+                ElevatedButton(
+                    child: Text('URI Params'),
+                    style: _auxButtonStyle,
+                    onPressed: () => showDialog(
+                        context: context,
+                        builder: (_) => KeyValuePairSettingsScreen(
+                            "URI Params", _uriParams))),
+                ElevatedButton(
+                    child: Text('JSON Payload'),
+                    style: _auxButtonStyle,
+                    onPressed: () => showDialog(
+                        context: context,
+                        builder: (_) => KeyValuePairSettingsScreen(
+                            "JSON Payload", _jsonParams))),
+                ElevatedButton(
+                    child: Text('Headers'),
+                    style: _auxButtonStyle,
+                    onPressed: () => showDialog(
+                        context: context,
+                        builder: (_) => KeyValuePairSettingsScreen(
+                            "HTTP Headers", _httpHeaders)))
+              ],
+            ),
+            SizedBox(height: 8),
+            SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                    style: _auxButtonStyle,
+                    child: Text('Save'),
+                    onPressed: !_checkValidUrl(_controller.text)
+                        ? null
+                        : () {
+                            _saveSettings();
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(new SnackBar(
+                              content: new Text("Saved"),
+                            ));
+                          }))
           ],
-        ));
-      }),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showResetDialogAndUpdate(() {
           _controller.text =
@@ -620,43 +662,42 @@ class _TelegramBotForwarderScreen
       appBar: AppBar(
         title: Text('Telegram Bot Settings'),
       ),
-      body: Builder(builder: (BuildContext context) {
-        return Center(
-            child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: ResponsiveScaffoldBody(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Text("Specify your telegram chat id:"),
-            Padding(padding: EdgeInsets.symmetric(vertical: 5)),
-            Container(
-              width: 300,
-              child: TextField(
-                decoration: _chatIdInputDecoration,
-                controller: _chatIdController,
-              ),
+            SizedBox(height: 8),
+            TextField(
+              decoration: _chatIdInputDecoration,
+              controller: _chatIdController,
+              keyboardType: TextInputType.number,
             ),
-            Padding(padding: EdgeInsets.symmetric(vertical: 5)),
+            SizedBox(height: 12),
             Text("Specify your telegram token:"),
-            Padding(padding: EdgeInsets.symmetric(vertical: 5)),
-            Container(
-              width: 300,
-              child: TextField(
-                decoration: _tokenInputDecoration,
-                controller: _tokenController,
-              ),
+            SizedBox(height: 8),
+            TextField(
+              decoration: _tokenInputDecoration,
+              controller: _tokenController,
             ),
-            ElevatedButton(
-                child: Text('Save'),
-                onPressed: !_checkAllIsValid()
-                    ? null
-                    : () {
-                        _saveSettings();
-                        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
-                          content: new Text("Saved"),
-                        ));
-                      }),
+            SizedBox(height: 12),
+            SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                    style: _auxButtonStyle,
+                    child: Text('Save'),
+                    onPressed: !_checkAllIsValid()
+                        ? null
+                        : () {
+                            _saveSettings();
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(new SnackBar(
+                              content: new Text("Saved"),
+                            ));
+                          })),
           ],
-        ));
-      }),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showResetDialogAndUpdate(() {
           _tokenController.text = widget.fwd.telegramBotForwarder?.token ?? "";
@@ -803,56 +844,51 @@ class _DeployedTelegramBotForwarderScreen
       appBar: AppBar(
         title: Text('Deployed Bot Settings'),
       ),
-      body: Builder(builder: (BuildContext context) {
-        return Center(
-            child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: ResponsiveScaffoldBody(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Text("Your SMS data will be sent to the broker server!",
                 style: TextStyle(color: Colors.red, fontSize: 10)),
             Text("Specify your telegram @username:"),
-            Padding(padding: EdgeInsets.symmetric(vertical: 3)),
-            Container(
-              width: 300,
-              child: TextField(
-                decoration: _tgHandleInputDecoration,
-                controller: _tgHandleController,
-              ),
+            SizedBox(height: 6),
+            TextField(
+              decoration: _tgHandleInputDecoration,
+              controller: _tgHandleController,
             ),
-            Padding(padding: EdgeInsets.symmetric(vertical: 3)),
+            SizedBox(height: 8),
             Text("Specify a broker url:"),
-            Padding(padding: EdgeInsets.symmetric(vertical: 3)),
-            Container(
-              width: 300,
-              child: TextField(
-                decoration: _baseUrlInputDecoration,
-                controller: _baseUrlController,
-              ),
+            SizedBox(height: 6),
+            TextField(
+              decoration: _baseUrlInputDecoration,
+              controller: _baseUrlController,
             ),
-            Padding(padding: EdgeInsets.symmetric(vertical: 4)),
+            SizedBox(height: 8),
             Text("Specify the broker's bot @handle:"),
-            Padding(padding: EdgeInsets.symmetric(vertical: 4)),
-            Container(
-              width: 300,
-              child: TextField(
-                decoration: _botHandleInputDecoration,
-                controller: _botHandleController,
-              ),
+            SizedBox(height: 6),
+            TextField(
+              decoration: _botHandleInputDecoration,
+              controller: _botHandleController,
             ),
-            ElevatedButton(
-                child: Text('Save'),
-                onPressed: !_checkAllIsValid()
-                    ? null
-                    : () {
-                        _saveSettings();
-                        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
-                          content: new Text("Saved"),
-                        ));
-                        _openTelegramUrlInBrowser();
-                      }),
+            SizedBox(height: 12),
+            SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                    style: _auxButtonStyle,
+                    child: Text('Save'),
+                    onPressed: !_checkAllIsValid()
+                        ? null
+                        : () {
+                            _saveSettings();
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(new SnackBar(
+                              content: new Text("Saved"),
+                            ));
+                            _openTelegramUrlInBrowser();
+                          })),
           ],
-        ));
-      }),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showResetDialogAndUpdate(() {
           _tgHandleController.text =

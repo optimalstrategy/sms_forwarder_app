@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'responsive.dart';
 
 /// A screen with a vertical list of key-value pairs. Pairs may be removed
 /// and created dynamically. The widget uses the provided kvMap as its baking storage,
@@ -50,6 +51,28 @@ class _KeyValuePairScreenState extends State<KeyValuePairSettingsScreen> {
     pairs.add(Padding(padding: EdgeInsets.symmetric(vertical: 5)));
   }
 
+  /// Removes a specific key-value pair widget (by its Widget Key) and its
+  /// trailing padding without rebuilding all pairs from kvMap. Optionally also
+  /// removes the corresponding entry from kvMap using [dataKey].
+  void removePairByWidgetKey(Key? widgetKey, {String? dataKey}) {
+    if (widgetKey == null) return;
+    setState(() {
+      if (dataKey != null && dataKey.isNotEmpty) {
+        kvMap.remove(dataKey);
+      }
+
+      final idx = pairs.indexWhere((w) => w.key == widgetKey);
+      if (idx >= 0) {
+        pairs.removeAt(idx);
+        if (idx < pairs.length && pairs[idx] is Padding) {
+          pairs.removeAt(idx);
+        } else if (idx - 1 >= 0 && pairs[idx - 1] is Padding) {
+          pairs.removeAt(idx - 1);
+        }
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -62,15 +85,20 @@ class _KeyValuePairScreenState extends State<KeyValuePairSettingsScreen> {
       appBar: AppBar(
         title: Text(title),
       ),
-      body: Center(
+      body: ResponsiveScaffoldBody(
         child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: pairs +
                 <Widget>[
-                  FloatingActionButton(
-                    onPressed: () => {setState(() => addKvWidget(key: null))},
-                    tooltip: 'Add New Key Value Pair',
-                    child: Icon(Icons.add),
+                  SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      icon: Icon(Icons.add),
+                      label: Text('Add New Key Value Pair'),
+                      onPressed: () =>
+                          {setState(() => addKvWidget(key: null))},
+                    ),
                   ),
                 ]),
       ),
@@ -99,7 +127,9 @@ class _KeyValuePairWidget extends StatefulWidget {
 }
 
 class _KeyValuePairWidgetState extends State<_KeyValuePairWidget> {
-  _KeyValuePairWidgetState(this._parentState, this.kvMap, this.key) : super();
+  _KeyValuePairWidgetState(this._parentState, this.kvMap, this.key)
+      : _initialKey = key,
+        super();
 
   /// The state of the parent settings screen widget.
   final _KeyValuePairScreenState _parentState;
@@ -109,6 +139,9 @@ class _KeyValuePairWidgetState extends State<_KeyValuePairWidget> {
 
   /// The currently displayed key / previous key value.
   String key = "";
+
+  /// The originally provided key (used to remove from kvMap if unchanged)
+  final String _initialKey;
 
   /// The currently displayed value / previous `value` value.
   String? value;
@@ -208,31 +241,45 @@ class _KeyValuePairWidgetState extends State<_KeyValuePairWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Container(
-          width: 125,
-          child: TextField(
-              decoration: _keyInputDecoration, controller: _keyController)),
-      Padding(padding: EdgeInsets.symmetric(horizontal: 5)),
-      Container(
-          width: 200,
-          child: TextField(
-              enabled: _valueEnabled,
-              decoration: _valueInputDecoration,
-              controller: _valueController)),
-      IconButton(
+    return LayoutBuilder(builder: (context, constraints) {
+      final isNarrow = constraints.maxWidth < 420;
+      final keyFieldBox = TextField(
+          decoration: _keyInputDecoration, controller: _keyController);
+      final valueFieldBox = TextField(
+          enabled: _valueEnabled,
+          decoration: _valueInputDecoration,
+          controller: _valueController);
+      final deleteBtn = IconButton(
         padding: EdgeInsets.zero,
         visualDensity: VisualDensity.compact,
         icon: Icon(Icons.delete),
         iconSize: 24.0,
         color: Colors.red,
         onPressed: () {
-          _parentState.setState(() {
-            kvMap.remove(key);
-            _parentState.buildKeyValueRows();
-          });
+          // Remove this pair only, and its kvMap entry based on current key
+          // or fallback to initial key if current key is empty.
+          final dataKey = key.isNotEmpty ? key : _initialKey;
+          _parentState.removePairByWidgetKey(widget.key, dataKey: dataKey);
         },
-      ),
-    ]);
+      );
+
+      if (isNarrow) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            keyFieldBox,
+            SizedBox(height: 6),
+            valueFieldBox,
+            Align(alignment: Alignment.centerRight, child: deleteBtn),
+          ],
+        );
+      }
+      return Row(children: [
+        Expanded(flex: 4, child: keyFieldBox),
+        SizedBox(width: 8),
+        Expanded(flex: 7, child: valueFieldBox),
+        deleteBtn,
+      ]);
+    });
   }
 }

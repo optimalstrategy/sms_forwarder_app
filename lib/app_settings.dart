@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sms_forwarder/background_forwarder.dart';
 import 'package:another_telephony/telephony.dart';
+import 'responsive.dart';
 
 class SettingStrings {
   static final String launchOnStartup = "launch_on_startup";
@@ -91,65 +92,64 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
       appBar: AppBar(
         title: Text("App Settings"),
       ),
-      body: Center(
+      body: ResponsiveScaffoldBody(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Row(children: <Widget>[
-              Text(
-                "Launch on Startup: ",
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                "Launch on Startup",
                 style: TextStyle(fontSize: 20),
               ),
-              Switch(
-                activeColor: Colors.green,
-                value: _launchOnStartup,
-                onChanged: (value) {
-                  setState(() => _launchOnStartup = value);
-                  _updatePreferences();
-                },
-              )
-            ], mainAxisAlignment: MainAxisAlignment.spaceAround),
-            Column(children: <Widget>[
-              Container(
-                child: TextField(
-                  controller: _testMessageController,
-                  decoration: InputDecoration(
-                      border: _testMessageBorder,
-                      enabledBorder: _testMessageBorder,
-                      disabledBorder: _testMessageBorder,
-                      hintText: "Enter a test message"),
-                ),
-                width: 350,
-              ),
-              ElevatedButton(
+              value: _launchOnStartup,
+              activeColor: Colors.green,
+              onChanged: (value) {
+                setState(() => _launchOnStartup = value);
+                _updatePreferences();
+              },
+            ),
+            SizedBox(height: 8),
+            TextField(
+              controller: _testMessageController,
+              decoration: InputDecoration(
+                  border: _testMessageBorder,
+                  enabledBorder: _testMessageBorder,
+                  disabledBorder: _testMessageBorder,
+                  hintText: "Enter a test message"),
+            ),
+            SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
                 child: Text('Send Test Message'),
                 onPressed: _testForwarders,
               ),
-              ListView.builder(
-                padding: const EdgeInsets.all(8),
-                shrinkWrap: true,
-                itemCount: results.length,
-                itemBuilder: (context, index) {
-                  final forwarder = results[index];
-                  final result = _forwardingResults[forwarder];
-                  Color color;
-                  if (result == null) {
-                    color = Colors.grey;
-                  } else if (result) {
-                    color = Colors.green;
-                  } else {
-                    color = Colors.red.shade200;
-                  }
-                  return Container(
-                    height: 50,
-                    child: Center(child: Text(forwarder)),
-                    decoration:
-                        BoxDecoration(border: Border.all(), color: color),
-                    margin: EdgeInsets.symmetric(vertical: 1),
-                  );
-                },
-              )
-            ])
+            ),
+            ListView.builder(
+              padding: const EdgeInsets.all(8),
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: results.length,
+              itemBuilder: (context, index) {
+                final forwarder = results[index];
+                final result = _forwardingResults[forwarder];
+                Color color;
+                if (result == null) {
+                  color = Colors.grey;
+                } else if (result) {
+                  color = Colors.green;
+                } else {
+                  color = Colors.red.shade200;
+                }
+                return Container(
+                  height: 50,
+                  child: Center(child: Text(forwarder)),
+                  decoration: BoxDecoration(border: Border.all(), color: color),
+                  margin: EdgeInsets.symmetric(vertical: 1),
+                );
+              },
+            )
           ],
         ),
       ),
