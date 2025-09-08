@@ -18,7 +18,7 @@ def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
-    compileSdkVersion = 35
+    compileSdkVersion = 36
     ndkVersion = '27.0.12077973'
     namespace "team.whatever.sms_forwarder_app"
 

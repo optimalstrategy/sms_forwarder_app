@@ -1,10 +1,13 @@
 import 'dart:math';
+import 'dart:io';
 import 'dart:core';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:another_telephony/telephony.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sms_forwarder/retry_defs.dart';
+import 'package:sms_forwarder/utils.dart';
 
 extension ToMap on SmsMessage {
   Map get toMap {
@@ -62,6 +65,42 @@ class StdoutForwarder implements AbstractForwarder {
 /// The abstract HTTP forwarder. Provides a default implementation of the
 /// [forward] and [mapToUri] methods. Requires the user to implement [send].
 abstract mixin class HttpForwarder implements AbstractForwarder {
+  /// Detailed forward result for classification and retry logic.
+  Future<ForwardAttemptResult> forwardWithResult(SmsMessage sms) async {
+    try {
+      final response = await send(sms);
+      final isSuccess = response.statusCode >= 200 && response.statusCode < 400;
+      return ForwardAttemptResult(
+        success: isSuccess,
+        statusCode: response.statusCode,
+        isNetworkError: response.statusCode >= 500,
+        errorMessage: isSuccess ? null : 'HTTP ${response.statusCode}',
+      );
+    } on SocketException catch (e) {
+      return ForwardAttemptResult(
+        success: false,
+        statusCode: null,
+        isNetworkError: true,
+        errorMessage: e.message,
+      );
+    } on HandshakeException catch (e) {
+      return ForwardAttemptResult(
+        success: false,
+        statusCode: null,
+        isNetworkError: true,
+        errorMessage: e.message,
+      );
+    } catch (e) {
+      // Treat unknown exceptions as network/retriable by default
+      return ForwardAttemptResult(
+        success: false,
+        statusCode: null,
+        isNetworkError: false,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
   /// Creates a uri encoded query string from the given [map].
   /// NOTE: the entry with the key 'thread_id' will be removed.
   /// Example: `mapToUri({"msg":  "test message", "code": 10})` produces
@@ -77,7 +116,7 @@ abstract mixin class HttpForwarder implements AbstractForwarder {
   /// Casts all keys and values in the map to String and serializes
   /// the resulting map as JSON.
   static String mapToJson(Map map) =>
-      json.encode(_castMap(map, castValues: false));
+      toJsonString(_castMap(map, castValues: false));
 
   /// Casts all keys and values in the map to String. Removes the entry with
   /// the key threadId.
@@ -103,6 +142,27 @@ abstract mixin class HttpForwarder implements AbstractForwarder {
       debugPrint("Response body: \'${response.body}\'.");
       return response.statusCode >= 200 && response.statusCode < 400;
     });
+  }
+}
+
+/// Result of a single forward attempt.
+class ForwardAttemptResult {
+  final bool success;
+  final int? statusCode;
+  final bool isNetworkError;
+  final String? errorMessage;
+
+  ForwardAttemptResult({
+    required this.success,
+    required this.statusCode,
+    required this.isNetworkError,
+    this.errorMessage,
+  });
+
+  @override
+  String toString() {
+    return "ForwardAttemptResult(success: $success, status: $statusCode, "
+        "network: $isNetworkError, message: `$errorMessage`)";
   }
 }
 
@@ -156,8 +216,8 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
   /// Creates a new HttpCallbackForwarder from the given [json] object.
   @override
   HttpCallbackForwarder.fromJson(Map json) {
-    if (json.containsKey("HttpCallbackForwarder")) {
-      json = json["HttpCallbackForwarder"];
+    if (json.containsKey(kFwdHttp)) {
+      json = json[kFwdHttp];
     }
     var callbackUrl = json["callbackUrl"];
     if (callbackUrl == null) throw ArgumentError("Missing the callback url.");
@@ -188,14 +248,14 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
   /// Dumps the forwarder's configuration to json
   @override
   String toJson() {
-    var fields = json.encode({
+    var fields = toJsonString({
       "callbackUrl": _callbackUrl,
       "method": method.name,
       "uriPayload": uriPayload,
       "jsonPayload": jsonPayload,
       "httpHeaders": httpHeaders,
     });
-    return '{"HttpCallbackForwarder": $fields}';
+    return '{$kFwdHttp: $fields}';
   }
 
   /// URI encodes the SMS' contents and appends the result to the callback url,
@@ -207,7 +267,7 @@ class HttpCallbackForwarder extends AbstractForwarder with HttpForwarder {
       case HttpMethod.GET:
         // Convert the sms to JSON and merge it with the uri payload
         final smsData = sms.toMap;
-        smsData.addAll(uriPayload);
+        smsData.addAll(_interpolateSmsFormatters(sms, uriPayload));
         // Then URI encode the map and perform the request
         final uriParams = HttpForwarder.mapToUri(smsData);
         final url = Uri.parse("$_callbackUrl$uriParams");
@@ -329,7 +389,7 @@ class TelegramBotForwarder extends AbstractForwarder with HttpForwarder {
   @override
   String toJson() {
     var fields = {"token": _token, "chatId": _chatId};
-    return json.encode({"TelegramBotForwarder": fields});
+    return toJsonString({kFwdTg: fields});
   }
 }
 
@@ -421,6 +481,6 @@ class DeployedTelegramBotForwarder extends HttpCallbackForwarder {
       "tgHandle": _tgHandle,
       "botHandle": _botHandle,
     };
-    return json.encode({"DeployedTelegramBotForwarder": fields});
+    return toJsonString({kFwdDeployed: fields});
   }
 }

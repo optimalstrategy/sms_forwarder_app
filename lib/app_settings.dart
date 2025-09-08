@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sms_forwarder/background_forwarder.dart';
 import 'package:another_telephony/telephony.dart';
+import 'package:sms_forwarder/retry_defs.dart';
 import 'responsive.dart';
 
 class SettingStrings {
@@ -38,9 +39,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     setState(_onTextChanged);
 
     _forwardingResults = {
-      "HttpCallbackForwarder": null,
-      "TelegramBotForwarder": null,
-      "DeployedTelegramBotForwarder": null,
+      kFwdHttp: null,
+      kFwdTg: null,
+      kFwdDeployed: null,
     };
 
     fwd.loadFromPrefs();
@@ -103,7 +104,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 style: TextStyle(fontSize: 20),
               ),
               value: _launchOnStartup,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
               onChanged: (value) {
                 setState(() => _launchOnStartup = value);
                 _updatePreferences();

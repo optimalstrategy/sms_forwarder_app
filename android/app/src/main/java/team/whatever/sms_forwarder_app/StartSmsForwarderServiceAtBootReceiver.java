@@ -10,7 +10,7 @@ import android.util.Log;
 
 import static android.content.Context.MODE_PRIVATE;
 
-class StartSmsForwarderServiceAtBootReceiver extends BroadcastReceiver {
+public class StartSmsForwarderServiceAtBootReceiver extends BroadcastReceiver {
     private static final String TAG = StartSmsForwarderServiceAtBootReceiver.class.getSimpleName();
 
     @Override

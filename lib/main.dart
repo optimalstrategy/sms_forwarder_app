@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sms_forwarder/retry_defs.dart';
+import 'package:sms_forwarder/retry_worker.dart';
 import 'package:sms_forwarder/update_checker.dart';
 import 'package:another_telephony/telephony.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,7 +19,11 @@ final NAVIGATOR_KEY = GlobalKey<NavigatorState>();
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(new MyApp(new BackgroundForwarder(Telephony.instance)));
+  final bg = new BackgroundForwarder(Telephony.instance);
+  RetryWorker.initialize().then((_) {
+    RetryWorker.schedulePeriodic();
+  });
+  runApp(new MyApp(bg));
 }
 
 class MyApp extends StatelessWidget {
@@ -85,11 +91,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   void _setForwardersColors(Map map) {
     setState(() {
-      _deployedBotBtnState =
-          map['DeployedTelegramBotForwarder'] ? _greenColor : _yellowColor;
-      _tgBotBtnState = map['TelegramBotForwarder'] ? _greenColor : _yellowColor;
-      _callbackBtnState =
-          map['HttpCallbackForwarder'] ? _greenColor : _yellowColor;
+      _deployedBotBtnState = map[kFwdDeployed] ? _greenColor : _yellowColor;
+      _tgBotBtnState = map[kFwdTg] ? _greenColor : _yellowColor;
+      _callbackBtnState = map[kFwdHttp] ? _greenColor : _yellowColor;
     });
   }
 
@@ -411,8 +415,6 @@ class _HttpCallbackForwarderState
       hintText: "https://cb.example.com/endpoint",
       hintStyle: TextStyle(fontSize: 16));
 
-  
-
   @override
   void initState() {
     super.initState();
@@ -497,8 +499,8 @@ class _HttpCallbackForwarderState
                             child: Text(
                               _method.name,
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 20, color: Colors.green),
+                              style:
+                                  TextStyle(fontSize: 20, color: Colors.green),
                             ),
                           ),
                         ),

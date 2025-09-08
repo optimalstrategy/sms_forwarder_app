@@ -96,8 +96,7 @@ class _KeyValuePairScreenState extends State<KeyValuePairSettingsScreen> {
                     child: OutlinedButton.icon(
                       icon: Icon(Icons.add),
                       label: Text('Add New Key Value Pair'),
-                      onPressed: () =>
-                          {setState(() => addKvWidget(key: null))},
+                      onPressed: () => {setState(() => addKvWidget(key: null))},
                     ),
                   ),
                 ]),

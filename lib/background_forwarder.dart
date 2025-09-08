@@ -9,6 +9,7 @@ class BackgroundForwarder {
   static ForwarderManager? _backgroundManager;
   final ForwarderManager mgr = new ForwarderManager();
 
+  @pragma('vm:entry-point')
   BackgroundForwarder(Telephony telephony) {
     telephony.listenIncomingSms(
         onNewMessage: (msg) async => await mgr.forward(msg),

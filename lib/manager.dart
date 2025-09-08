@@ -1,7 +1,12 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:another_telephony/telephony.dart';
+import 'package:sms_forwarder/retry_worker.dart';
 import 'forwarding.dart';
+import 'forwarding_queue.dart';
+import 'retry_defs.dart';
+import 'package:crypto/crypto.dart';
 
 import 'dart:core';
 
@@ -15,12 +20,102 @@ class ForwarderManager {
 
   /// Returns the mapping (forwarder name -> forwarding result)
   Future<Map<String, bool?>> forward(SmsMessage sms) async {
-    Map<String, bool> map = {};
-    map["HttpCallbackForwarder"] = await tryForward(httpCallbackForwarder, sms);
-    map["TelegramBotForwarder"] = await tryForward(telegramBotForwarder, sms);
-    map["DeployedTelegramBotForwarder"] =
-        await tryForward(deployedTelegramBotForwarder, sms);
-    return map;
+    final Map<String, bool?> results = {};
+    final Map<String, ForwarderProgress> progress = {};
+
+    // Helper to classify a single forward attempt
+    Future<void> handleForward(String name, AbstractForwarder? fwd) async {
+      debugPrint(
+          'Trying $name $fwd (isHttp ${fwd != null && fwd is HttpForwarder})');
+      if (fwd == null) {
+        results[name] = false;
+        return;
+      }
+
+      try {
+        if (fwd is HttpForwarder) {
+          var r = await fwd.forwardWithResult(sms);
+          debugPrint('SMS forwarded: $r');
+          if (Random.secure().nextBool()) {
+            r = ForwardAttemptResult(
+                success: false, statusCode: 500, isNetworkError: true);
+            debugPrint('Made result failed $r');
+          }
+          results[name] = r.success;
+          if (r.success) {
+            progress[name] = ForwarderProgress(
+                forwarderName: name,
+                state: ForwarderAttemptState.success,
+                retryCount: 0,
+                maxRetries: kDefaultMaxRetries);
+          } else {
+            final retriable = r.isNetworkError ||
+                (r.statusCode != null && r.statusCode! >= 500);
+            progress[name] = ForwarderProgress(
+              forwarderName: name,
+              state: retriable
+                  ? ForwarderAttemptState.retriableFailure
+                  : ForwarderAttemptState.nonRetriableFailure,
+              retryCount: 0,
+              maxRetries: kDefaultMaxRetries,
+              lastError: r.errorMessage,
+            );
+          }
+        } else {
+          final ok = await fwd.forward(sms);
+          results[name] = ok;
+          progress[name] = ForwarderProgress(
+            forwarderName: name,
+            state: ok
+                ? ForwarderAttemptState.success
+                : ForwarderAttemptState.nonRetriableFailure,
+            retryCount: 0,
+            maxRetries: kDefaultMaxRetries,
+            lastError: ok ? null : 'forward_failed',
+          );
+        }
+      } catch (ex) {
+        debugPrint("Failed to forward the message with " +
+            fwd.runtimeType.toString() +
+            ": " +
+            ex.toString());
+        results[name] = false;
+        progress[name] = ForwarderProgress(
+          forwarderName: name,
+          state: ForwarderAttemptState.retriableFailure,
+          retryCount: 0,
+          maxRetries: kDefaultMaxRetries,
+          lastError: ex.toString(),
+        );
+      }
+    }
+
+    await handleForward(kFwdHttp, httpCallbackForwarder);
+    await handleForward(kFwdTg, telegramBotForwarder);
+    await handleForward(kFwdDeployed, deployedTelegramBotForwarder);
+    new StdoutForwarder().forward(sms);
+
+    // If any retriable failures, queue the whole SMS for later retry
+    final hasRetriable = progress.values
+        .any((p) => p.state == ForwarderAttemptState.retriableFailure);
+    if (hasRetriable) {
+      final smsMap = sms.toMap;
+      final key = _computeSmsKey(smsMap);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final item = ForwardingQueueItem(
+        smsKey: key,
+        sms: Map.from(smsMap.map((k, v) => MapEntry(k.toString(), v))),
+        forwarders: progress,
+        status: QueueItemStatus.pending,
+        createdAtMs: now,
+        updatedAtMs: now,
+        retryCount: 0,
+      );
+      await ForwardingRequestQueue().putOrUpdate(item);
+      await RetryWorker.scheduleRetryOneOffImmediate();
+    }
+
+    return results;
   }
 
   Future<bool> tryForward(AbstractForwarder? fwd, SmsMessage sms) async {
@@ -37,9 +132,9 @@ class ForwarderManager {
 
   /// Returns the mapping (forwarder name -> forwarder object)
   Map<String, AbstractForwarder?> asMap() => {
-        "HttpCallbackForwarder": httpCallbackForwarder,
-        "TelegramBotForwarder": telegramBotForwarder,
-        "DeployedTelegramBotForwarder": deployedTelegramBotForwarder,
+        kFwdHttp: httpCallbackForwarder,
+        kFwdTg: telegramBotForwarder,
+        kFwdDeployed: deployedTelegramBotForwarder,
       };
 
   /// Returns a list of forwarder objects.
@@ -93,5 +188,15 @@ class ForwarderManager {
     final prefs = await SharedPreferences.getInstance();
     var jsonStr = dumpToJson();
     prefs.setString("forwarders", jsonStr);
+  }
+
+  String _computeSmsKey(Map smsMap) {
+    final id = smsMap['id']?.toString() ?? '';
+    final address = smsMap['address']?.toString() ?? '';
+    final date = smsMap['date']?.toString() ?? '';
+    final threadId = smsMap['threadId']?.toString() ?? '';
+    final body = smsMap['body']?.toString() ?? '';
+    final payload = '$id|$threadId|$address|$date|$body';
+    return sha256.convert(utf8.encode(payload)).toString();
   }
 }
