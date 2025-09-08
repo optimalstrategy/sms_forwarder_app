@@ -266,4 +266,92 @@ class ForwardingRequestQueue {
     await db.update('forwarding_queue', item.toDbMap(),
         where: 'id = ?', whereArgs: [item.id]);
   }
+
+  /// Returns aggregate counts by status for display.
+  Future<QueueCounts> getCounts() async {
+    final db = await _getDb();
+    final rows = await db.rawQuery(
+        'SELECT status, COUNT(*) as c FROM forwarding_queue GROUP BY status');
+    int pending = 0;
+    int success = 0;
+    int partial = 0;
+    int failure = 0;
+    for (final r in rows) {
+      final s = (r['status'] as String?) ?? 'pending';
+      final c = (r['c'] as int?) ?? 0;
+      switch (s) {
+        case 'success':
+          success = c;
+          break;
+        case 'partial_failure':
+          partial = c;
+          break;
+        case 'failure':
+          failure = c;
+          break;
+        case 'pending':
+        default:
+          pending = c;
+          break;
+      }
+    }
+    return QueueCounts(
+        pending: pending,
+        success: success,
+        partialFailure: partial,
+        failure: failure);
+  }
+
+  /// Returns total number of items, optionally filtered by [status].
+  Future<int> totalCount({QueueItemStatus? status}) async {
+    final db = await _getDb();
+    if (status == null) {
+      final rows =
+          await db.rawQuery('SELECT COUNT(*) as c FROM forwarding_queue');
+      if (rows.isEmpty) return 0;
+      return (rows.first['c'] as int?) ?? 0;
+    } else {
+      final rows = await db.rawQuery(
+          'SELECT COUNT(*) as c FROM forwarding_queue WHERE status = ?',
+          [queueItemStatusToString(status)]);
+      if (rows.isEmpty) return 0;
+      return (rows.first['c'] as int?) ?? 0;
+    }
+  }
+
+  /// Lists items for the UI, ordered by creation time descending.
+  Future<List<ForwardingQueueItem>> listItems(
+      {QueueItemStatus? status, int limit = 50, int offset = 0}) async {
+    final db = await _getDb();
+    List<Map<String, Object?>> rows;
+    if (status == null) {
+      rows = await db.query('forwarding_queue',
+          orderBy: 'created_at_ms DESC', limit: limit, offset: offset);
+    } else {
+      rows = await db.query('forwarding_queue',
+          where: 'status = ?',
+          whereArgs: [queueItemStatusToString(status)],
+          orderBy: 'created_at_ms DESC',
+          limit: limit,
+          offset: offset);
+    }
+    return rows.map((m) => ForwardingQueueItem.fromDbMap(m)).toList();
+  }
+}
+
+/// Aggregate counts holder for queue items.
+class QueueCounts {
+  final int pending;
+  final int success;
+  final int partialFailure;
+  final int failure;
+
+  QueueCounts({
+    required this.pending,
+    required this.success,
+    required this.partialFailure,
+    required this.failure,
+  });
+
+  int get total => pending + success + partialFailure + failure;
 }

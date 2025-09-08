@@ -25,22 +25,16 @@ class ForwarderManager {
 
     // Helper to classify a single forward attempt
     Future<void> handleForward(String name, AbstractForwarder? fwd) async {
-      debugPrint(
-          'Trying $name $fwd (isHttp ${fwd != null && fwd is HttpForwarder})');
       if (fwd == null) {
         results[name] = false;
         return;
       }
 
+      debugPrint('[handleForward] Attempting to forward via $name');
       try {
         if (fwd is HttpForwarder) {
           var r = await fwd.forwardWithResult(sms);
-          debugPrint('SMS forwarded: $r');
-          if (Random.secure().nextBool()) {
-            r = ForwardAttemptResult(
-                success: false, statusCode: 500, isNetworkError: true);
-            debugPrint('Made result failed $r');
-          }
+          debugPrint('[handleForward] Attempt result: $r');
           results[name] = r.success;
           if (r.success) {
             progress[name] = ForwarderProgress(

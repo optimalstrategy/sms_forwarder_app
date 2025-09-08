@@ -4,6 +4,8 @@ import 'package:sms_forwarder/background_forwarder.dart';
 import 'package:another_telephony/telephony.dart';
 import 'package:sms_forwarder/retry_defs.dart';
 import 'responsive.dart';
+import 'forwarding_queue.dart';
+import 'queue_screen.dart';
 
 class SettingStrings {
   static final String launchOnStartup = "launch_on_startup";
@@ -29,6 +31,17 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
 
   bool _launchOnStartup = true;
   late Map<String, bool?> _forwardingResults;
+  QueueCounts? _queueCounts;
+
+  /// Common style for auxiliary action buttons to match Save/aux buttons.
+  ButtonStyle get _auxButtonStyle => ElevatedButton.styleFrom(
+        backgroundColor: Colors.grey.shade300,
+        foregroundColor: Colors.blueGrey.shade800,
+        elevation: 7,
+        shadowColor: Colors.black54,
+        shape: StadiumBorder(),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      );
 
   @override
   void initState() {
@@ -51,6 +64,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
             prefs.getBool(SettingStrings.launchOnStartup) ?? true;
       });
     });
+    _loadQueueCounts();
   }
 
   void _onTextChanged() {
@@ -84,6 +98,54 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
         _forwardingResults = results;
       });
     }
+  }
+
+  Future<void> _loadQueueCounts() async {
+    final counts = await ForwardingRequestQueue().getCounts();
+    if (mounted) setState(() => _queueCounts = counts);
+  }
+
+  void _openQueue() {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const QueueScreen()))
+        .then((_) => _loadQueueCounts());
+  }
+
+  Widget _buildQueueSummary() {
+    final c = _queueCounts;
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.symmetric(vertical: 8),
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        title: Text('Forwarding Queue', style: TextStyle(fontSize: 18)),
+        subtitle: c == null
+            ? Text('Loading...')
+            : Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _countChip('Pending', c.pending, Colors.orange.shade600),
+                  _countChip('Success', c.success, Colors.green.shade600),
+                  _countChip(
+                      'Partial', c.partialFailure, Colors.amber.shade700),
+                  _countChip('Failed', c.failure, Colors.red.shade400),
+                ],
+              ),
+        trailing: TextButton.icon(
+          icon: Icon(Icons.list_alt),
+          label: Text('Open'),
+          onPressed: _openQueue,
+        ),
+      ),
+    );
+  }
+
+  Widget _countChip(String label, int count, Color color) {
+    return Chip(
+      backgroundColor: color,
+      label: Text('$label: $count', style: TextStyle(color: Colors.white)),
+    );
   }
 
   @override
@@ -123,6 +185,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                style: _auxButtonStyle,
                 child: Text('Send Test Message'),
                 onPressed: _testForwarders,
               ),
@@ -150,7 +213,8 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                   margin: EdgeInsets.symmetric(vertical: 1),
                 );
               },
-            )
+            ),
+            _buildQueueSummary(),
           ],
         ),
       ),

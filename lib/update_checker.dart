@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-const String APP_VERSION = "v1.7.0-alpha";
+const String APP_VERSION = "v1.8.0-alpha";
 const String GITHUB_URL = "https://github.com/optimalstrategy/"
     "sms_forwarder_app/releases/latest";
 const String GITHUB_API_URL = "https://api.github.com/repos/" +
